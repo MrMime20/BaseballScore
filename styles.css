@@ -378,6 +378,257 @@ button {
 }
 
 /* ========================================================================= */
+/* Main Screen Pitch Counter Widget (Scoreboard Integration)                 */
+/* ========================================================================= */
+
+.main-pitch-widget {
+  width: 100%;
+  border: 4px solid var(--border-color);
+  background-color: var(--bg-card);
+  border-radius: 20px;
+  box-shadow: 0 4px 16px var(--shadow-color);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  animation: fadeInWidget 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s ease;
+}
+
+@keyframes fadeInWidget {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.main-pitch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.main-pitcher-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background-color: var(--drawer-card);
+  border: 1.5px solid var(--drawer-border);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  max-width: 72%;
+}
+
+.main-pitcher-btn:hover {
+  border-color: var(--border-color);
+}
+
+.pitcher-team-pill {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 12px;
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  white-space: nowrap;
+}
+
+.main-pitcher-name {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.pitcher-swap-icon {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.main-pitch-header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pitch-mode-badge {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  padding: 3px 6px;
+  border-radius: 6px;
+  background-color: rgba(125, 125, 125, 0.15);
+  color: var(--text-secondary);
+}
+
+.main-pitch-expand-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background-color: var(--drawer-card);
+  border: 1.5px solid var(--drawer-border);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.main-pitch-expand-btn:hover {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.main-pitch-body {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.main-pitch-count-box {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.main-pitch-count-box.mini {
+  align-items: baseline;
+  gap: 4px;
+}
+
+.main-pitch-big-num {
+  font-size: 38px;
+  font-weight: 900;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.main-pitch-label {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+}
+
+.main-pitch-simple-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.main-pitch-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 2px 8px var(--shadow-color);
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.main-pitch-add-btn:hover {
+  transform: translateY(-1px);
+}
+
+.main-pitch-add-btn:active {
+  transform: scale(0.95);
+}
+
+.main-pitch-undo-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 2px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: var(--text-secondary);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.main-pitch-undo-btn:hover {
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Advanced main widget controls */
+.main-pitch-body#main-pitch-adv-view {
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.main-pitch-adv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.main-pitch-adv-breakdown {
+  display: flex;
+  gap: 6px;
+}
+
+.adv-stat-pill {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background-color: var(--drawer-card);
+  border: 1px solid var(--drawer-border);
+  color: var(--text-primary);
+}
+
+.adv-stat-pill.strike strong { color: #16a34a; }
+.adv-stat-pill.ball strong { color: #dc2626; }
+.adv-stat-pill.pct strong { color: var(--accent-color); }
+
+.main-pitch-adv-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 5px;
+  width: 100%;
+}
+
+.adv-quick-btn {
+  padding: 7px 4px;
+  border-radius: 10px;
+  border: 1.5px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.adv-quick-btn:active { transform: scale(0.94); }
+.adv-quick-btn.strike:hover { background-color: #16a34a; color: #fff; border-color: #16a34a; }
+.adv-quick-btn.ball:hover { background-color: #dc2626; color: #fff; border-color: #dc2626; }
+.adv-quick-btn.foul:hover { background-color: #d97706; color: #fff; border-color: #d97706; }
+.adv-quick-btn.inplay:hover { background-color: #2563eb; color: #fff; border-color: #2563eb; }
+.adv-quick-btn.undo { width: 32px; display: flex; align-items: center; justify-content: center; }
+
+/* ========================================================================= */
 /* Bottom Row: Outs & Inning Controls                                        */
 /* ========================================================================= */
 
@@ -874,6 +1125,24 @@ button {
   box-shadow: 0 0 0 3px rgba(125, 125, 125, 0.2);
 }
 
+/* Settings Toggle Rows for Pitch Counter */
+.settings-toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: var(--drawer-card);
+  border: 1.5px solid var(--drawer-border);
+  border-radius: 12px;
+  gap: 10px;
+}
+
+.setting-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
 /* Action Buttons in Settings */
 .actions-row {
   display: flex;
@@ -1226,22 +1495,137 @@ button {
 }
 
 /* ========================================================================= */
-/* 1. Pitch Counter Panel Styles                                             */
+/* 1. Pitch Counter Panel Styles (Simple & Advanced)                         */
 /* ========================================================================= */
+
+.pitch-toolbar-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--drawer-card);
+  border: 2px solid var(--drawer-border);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.pitch-toolbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.toolbar-label-group i {
+  color: var(--accent-color);
+  font-size: 13px;
+}
+
+/* Toggle Switch Component */
+.switch-toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+.switch-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-toggle .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--drawer-border);
+  border: 2px solid var(--border-color);
+  border-radius: 24px;
+  transition: 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.switch-toggle .slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-primary);
+  border-radius: 50%;
+  transition: 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.switch-toggle input:checked + .slider {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.switch-toggle input:checked + .slider:before {
+  transform: translateX(20px);
+  background-color: #ffffff;
+}
+
+/* Mode Segmented Controls */
+.pitch-mode-segment, .settings-segment-toggle {
+  display: flex;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: 12px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.mode-segment-btn, .segment-btn {
+  padding: 5px 12px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.mode-segment-btn.active, .segment-btn.active {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  box-shadow: 0 1px 4px var(--shadow-color);
+}
+
+/* Pitcher Configuration Card */
+.pitcher-config-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background-color: var(--drawer-card);
+  border: 2px solid var(--drawer-border);
+  border-radius: 16px;
+  padding: 12px;
+}
 
 .pitcher-team-toggle {
   display: flex;
-  background-color: var(--drawer-card);
+  background-color: var(--bg-card);
   border: 2px solid var(--drawer-border);
-  border-radius: 14px;
+  border-radius: 12px;
   padding: 3px;
   gap: 4px;
 }
 
 .pitch-team-btn {
   flex: 1;
-  padding: 8px 12px;
-  border-radius: 10px;
+  padding: 8px 10px;
+  border-radius: 9px;
   font-size: 12px;
   font-weight: 800;
   color: var(--text-secondary);
@@ -1256,6 +1640,113 @@ button {
   box-shadow: 0 2px 6px var(--shadow-color);
 }
 
+.pitcher-name-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.micro-label {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pitcher-input-inner {
+  display: flex;
+  gap: 6px;
+}
+
+.pitcher-input-inner input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.pitcher-roster-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.pitcher-roster-btn:hover {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+/* Simple Pitch Mode View */
+.simple-pitch-card {
+  background-color: var(--drawer-card);
+  border: 3px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  box-shadow: 0 6px 16px var(--shadow-color);
+}
+
+.simple-pitch-big-num {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.simple-pitch-label {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: var(--text-secondary);
+}
+
+.simple-pitch-giant-add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  border: 4px solid var(--border-color);
+  background-color: var(--accent-color);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 6px 18px var(--shadow-color);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.simple-pitch-giant-add:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-color);
+}
+
+.simple-pitch-giant-add:active {
+  transform: scale(0.96);
+}
+
+/* Advanced Pitch Mode View */
 .pitch-display-card {
   background-color: var(--drawer-card);
   border: 3px solid var(--border-color);
@@ -1381,7 +1872,7 @@ button {
 }
 
 /* ========================================================================= */
-/* 2. Hit Log Panel Styles (Field Diagram & Outcomes)                        */
+/* 2. Hit Log Panel Styles (Configurable Roster, Authentic Field, Outcomes)  */
 /* ========================================================================= */
 
 .log-section {
@@ -1417,19 +1908,30 @@ button {
   color: var(--text-primary);
 }
 
-.selected-zone-tag {
+.add-player-toggle-btn {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 11px;
   font-weight: 800;
   color: var(--accent-color);
   background-color: rgba(125, 125, 125, 0.12);
-  padding: 2px 8px;
+  padding: 3px 8px;
   border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.add-player-toggle-btn:hover {
+  background-color: var(--accent-color);
+  color: #ffffff;
 }
 
 .batter-selector-row {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .team-mini-toggle {
@@ -1456,20 +1958,115 @@ button {
   color: var(--bg-card);
 }
 
-.player-input-wrap {
+.player-select-wrap {
   flex: 1;
 }
 
-.player-input-wrap input {
+.player-select-dropdown {
   width: 100%;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: 10px;
   border: 2px solid var(--border-color);
   background-color: var(--drawer-card);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 800;
   outline: none;
+  cursor: pointer;
+}
+
+.remove-player-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1.5px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.remove-player-btn:hover {
+  background-color: #ef4444;
+  color: #ffffff;
+  border-color: #ef4444;
+}
+
+/* Expandable Add Player Box */
+.add-player-box {
+  background-color: var(--drawer-card);
+  border: 2px solid var(--border-color);
+  border-radius: 12px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeInWidget 0.2s ease;
+}
+
+.add-player-inputs {
+  display: flex;
+  gap: 6px;
+}
+
+.add-player-inputs input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.add-player-inputs .num-input {
+  width: 50px;
+  flex: none;
+  text-align: center;
+}
+
+.add-player-inputs .pos-select {
+  width: 58px;
+  flex: none;
+  padding: 6px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.add-player-btns {
+  display: flex;
+  gap: 6px;
+}
+
+.save-player-btn {
+  flex: 1;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.cancel-player-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  background-color: transparent;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .quick-player-chips {
@@ -1503,15 +2100,15 @@ button {
   border-color: var(--border-color);
 }
 
-/* Baseball Field Diagram SVG */
+/* Baseball Field Diagram SVG (Authentic Statcast Style) */
 .field-diagram-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: var(--drawer-card);
+  background-color: #0b1e12;
   border: 3px solid var(--border-color);
   border-radius: 20px;
-  padding: 10px;
+  padding: 8px;
   position: relative;
   overflow: hidden;
   box-shadow: 0 4px 14px var(--shadow-color);
@@ -1519,115 +2116,314 @@ button {
 
 .baseball-field-svg {
   width: 100%;
-  max-width: 280px;
+  max-width: 320px;
   height: auto;
   user-select: none;
-}
-
-.field-grass {
-  fill: #15803d;
-  opacity: 0.85;
-}
-
-.field-grass-inner {
-  fill: #16a34a;
-}
-
-.field-dirt {
-  fill: #b45309;
-  opacity: 0.7;
-}
-
-.field-line {
-  stroke: #ffffff;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-}
-
-.field-mound {
-  fill: #d97706;
-}
-
-.field-plate {
-  fill: #ffffff;
+  display: block;
 }
 
 .zone-poly, .zone-circle {
-  fill: rgba(255, 255, 255, 0.08);
-  stroke: rgba(255, 255, 255, 0.4);
-  stroke-width: 1.5;
+  fill: rgba(255, 255, 255, 0.05);
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 1;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: fill 0.18s ease, stroke 0.18s ease;
 }
 
 .zone-poly:hover, .zone-circle:hover {
-  fill: rgba(245, 158, 11, 0.4);
-  stroke: #f59e0b;
+  fill: rgba(250, 204, 21, 0.35);
+  stroke: #facc15;
 }
 
 .zone-poly.active, .zone-circle.active {
-  fill: rgba(239, 68, 68, 0.6);
+  fill: rgba(239, 68, 68, 0.45);
   stroke: #ffffff;
   stroke-width: 2;
   filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
 }
 
-.spray-marker {
-  fill: #ef4444;
+/* Active Spray Marker */
+.active-spray-marker {
+  pointer-events: none;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.marker-pulse-ring {
+  fill: none;
+  stroke: #ef4444;
+  stroke-width: 2.5;
+  animation: pulseTarget 1.5s infinite ease-out;
+}
+
+.marker-center-dot {
+  fill: #ffffff;
+  stroke: #ef4444;
+  stroke-width: 2.5;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.6));
+}
+
+@keyframes pulseTarget {
+  0% { r: 5; opacity: 1; }
+  100% { r: 16; opacity: 0; }
+}
+
+/* Historic Spray Chart Dots */
+.historic-dot {
+  cursor: pointer;
   stroke: #ffffff;
+  stroke-width: 1.2;
+  transition: transform 0.15s ease;
+}
+
+.historic-dot:hover {
+  transform: scale(1.6);
   stroke-width: 2;
-  transition: cx 0.25s cubic-bezier(0.16, 1, 0.3, 1), cy 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
-/* Outcomes Grid */
-.outcomes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+.spray-legend-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px;
+}
+
+.legend-chip {
+  font-size: 10px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+}
+
+.legend-chip.hit-1b i { color: #22c55e; }
+.legend-chip.hit-2b i { color: #3b82f6; }
+.legend-chip.hit-3b i { color: #f97316; }
+.legend-chip.hit-hr i { color: #eab308; }
+.legend-chip.play-out i { color: #ef4444; }
+.legend-chip.play-misc i { color: #a855f7; }
+
+/* ========================================================================= */
+/* Step 3: Searchable Play Outcome Styles                                    */
+/* ========================================================================= */
+
+.selected-outcome-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--drawer-card);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  padding: 10px 12px;
+  gap: 8px;
+}
+
+.outcome-badge-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.outcome-badge-pill {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.outcome-desc-text {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.change-outcome-btn {
+  display: flex;
+  align-items: center;
   gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
 }
 
-.outcome-btn {
-  padding: 8px 6px;
+.change-outcome-btn:hover {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+/* Searchable Dropdown Box */
+.searchable-outcome-box {
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  background-color: var(--drawer-card);
+  border: 2px solid var(--border-color);
+  border-radius: 14px;
+  padding: 10px;
+  animation: fadeInWidget 0.2s ease;
+}
+
+.searchable-outcome-box.open {
+  display: flex;
+}
+
+.outcome-search-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-card);
+  border: 1.5px solid var(--drawer-border);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+.outcome-search-input-wrap .search-icon {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.outcome-search-input-wrap input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 800;
+  outline: none;
+}
+
+.clear-search-btn {
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 2px;
+}
+
+.outcome-dropdown-list {
+  max-height: 200px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 4px;
+}
+
+.outcome-group-header {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  padding: 6px 8px 2px;
+  border-top: 1px solid var(--drawer-border);
+}
+
+.outcome-group-header:first-child {
+  border-top: none;
+}
+
+.outcome-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background-color: var(--bg-card);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.outcome-dropdown-item:hover, .outcome-dropdown-item.selected {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+.outcome-item-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.outcome-type-tag {
+  font-size: 9px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 6px;
+  text-transform: uppercase;
+}
+
+.outcome-type-tag.hit { background-color: #22c55e; color: #fff; }
+.outcome-type-tag.out { background-color: #ef4444; color: #fff; }
+.outcome-type-tag.misc { background-color: #a855f7; color: #fff; }
+
+.outcome-item-name {
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.outcome-item-desc {
+  font-size: 10px;
+  color: var(--text-secondary);
+}
+
+.outcome-dropdown-item:hover .outcome-item-desc {
+  color: var(--bg-card);
+  opacity: 0.85;
+}
+
+/* Quick Outcome Chips */
+.quick-outcome-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.quick-chip {
+  padding: 6px 10px;
   border-radius: 10px;
   border: 1.5px solid var(--drawer-border);
   background-color: var(--drawer-card);
   color: var(--text-primary);
   font-size: 11px;
   font-weight: 800;
-  text-align: center;
   cursor: pointer;
   transition: all 0.15s ease;
-  white-space: nowrap;
 }
 
-.outcome-btn:hover {
-  transform: translateY(-1px);
+.quick-chip:hover {
   border-color: var(--border-color);
 }
 
-.outcome-btn.active {
-  border-color: var(--border-color);
+.quick-chip.active {
   background-color: var(--border-color);
   color: var(--bg-card);
-  transform: scale(1.03);
+  border-color: var(--border-color);
 }
 
-.outcome-btn.hit.active {
-  background-color: #22c55e;
-  border-color: #22c55e;
-  color: #ffffff;
-}
-
-.outcome-btn.hr.active {
+.quick-chip.hr.active {
   background-color: #f59e0b;
   border-color: #f59e0b;
   color: #ffffff;
 }
 
-.outcome-btn.out.active {
+.quick-chip.out.active {
   background-color: #ef4444;
   border-color: #ef4444;
+  color: #ffffff;
+}
+
+.quick-chip.misc.active {
+  background-color: #a855f7;
+  border-color: #a855f7;
   color: #ffffff;
 }
 
