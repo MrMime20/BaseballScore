@@ -18,16 +18,13 @@
         <i class="fa-solid fa-share-nodes"></i>
       </button>
       
-      <!-- Interactive Timer Display -->
-      <div class="timer-display" id="timer-display" title="Tap to pause/resume; swipe down to reset">
-        <button type="button" class="timer-btn" id="timer-toggle-btn" aria-label="Pause or Resume Timer" title="Pause / Resume">
-          <i class="fa-solid fa-pause" id="timer-icon"></i>
-        </button>
+      <!-- Interactive Compact Timer Display -->
+      <button type="button" class="timer-display" id="timer-display" aria-label="Game Clock: Tap to pause or resume" title="Tap to pause or resume">
+        <span class="timer-status-badge" id="timer-status-badge">
+          <i class="fa-solid fa-play" id="timer-icon"></i>
+        </span>
         <span class="timer-digits" id="timer">00:00:00</span>
-        <button type="button" class="timer-btn reset-btn" id="timer-reset-btn" aria-label="Reset Timer" title="Reset Timer">
-          <i class="fa-solid fa-rotate-left"></i>
-        </button>
-      </div>
+      </button>
       
       <button class="icon-btn" id="settings-btn" aria-label="Game Settings" title="Settings & Themes">
         <i class="fa-solid fa-gear"></i>
@@ -77,6 +74,393 @@
         </div>
       </div>
     </footer>
+
+    <!-- Advanced Tools Tab Bar -->
+    <div class="advanced-tab-bar">
+      <button type="button" class="advanced-tools-tab-btn" id="advanced-tools-tab-btn" aria-label="Open Advanced Tools" title="Pitch Counter, Hit Log, Box Score, and Finish Game">
+        <i class="fa-solid fa-toolbox"></i>
+        <span>Advanced Tools</span>
+        <i class="fa-solid fa-chevron-up tab-arrow"></i>
+      </button>
+    </div>
+
+    <!-- Advanced Tools Rollout Drawer & Backdrop -->
+    <div class="settings-backdrop" id="advanced-backdrop" aria-hidden="true">
+      <div class="settings-drawer advanced-drawer" id="advanced-drawer" role="dialog" aria-modal="true" aria-labelledby="advanced-title">
+        <div class="drawer-header">
+          <div class="drawer-handle-bar"></div>
+          <div class="drawer-title-row">
+            <h2 id="advanced-title"><i class="fa-solid fa-toolbox"></i> Advanced Tools</h2>
+            <button type="button" class="close-drawer-btn" id="close-advanced-btn" aria-label="Close Advanced Tools">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+          <!-- Segmented Navigation for Advanced Tools -->
+          <nav class="advanced-nav-pills" id="advanced-nav-pills">
+            <button type="button" class="nav-pill-btn active" data-tool="pitches">
+              <i class="fa-solid fa-baseball"></i> <span>Pitches</span>
+            </button>
+            <button type="button" class="nav-pill-btn" data-tool="hitlog">
+              <i class="fa-solid fa-crosshairs"></i> <span>Hit Log</span>
+            </button>
+            <button type="button" class="nav-pill-btn" data-tool="boxscore">
+              <i class="fa-solid fa-table-cells"></i> <span>Box Score</span>
+            </button>
+            <button type="button" class="nav-pill-btn finish-pill" data-tool="finish">
+              <i class="fa-solid fa-flag-checkered"></i> <span>Finish Game</span>
+            </button>
+          </nav>
+        </div>
+
+        <div class="drawer-body">
+          <!-- 1. Pitch Counter Panel -->
+          <div class="advanced-panel active" id="panel-pitches">
+            <!-- Pitcher Team Toggle -->
+            <div class="pitcher-team-toggle">
+              <button type="button" class="pitch-team-btn active" id="pitch-team-home">Home Pitcher</button>
+              <button type="button" class="pitch-team-btn" id="pitch-team-away">Away Pitcher</button>
+            </div>
+
+            <!-- Pitch Counter Big Display -->
+            <div class="pitch-display-card">
+              <div class="pitch-main-count">
+                <span class="pitch-number" id="pitch-total-num">0</span>
+                <span class="pitch-label">TOTAL PITCHES</span>
+              </div>
+              <div class="pitch-stats-row">
+                <div class="pitch-stat">
+                  <span class="stat-num" id="pitch-strikes-num">0</span>
+                  <span class="stat-lbl">Strikes</span>
+                </div>
+                <div class="pitch-stat">
+                  <span class="stat-num" id="pitch-balls-num">0</span>
+                  <span class="stat-lbl">Balls</span>
+                </div>
+                <div class="pitch-stat">
+                  <span class="stat-num" id="pitch-pct-num">0%</span>
+                  <span class="stat-lbl">Strike %</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pitch Control Buttons Grid -->
+            <div class="pitch-actions-grid">
+              <button type="button" class="pitch-action-btn strike" id="btn-pitch-strike">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>Strike (+1)</span>
+              </button>
+              <button type="button" class="pitch-action-btn ball" id="btn-pitch-ball">
+                <i class="fa-solid fa-circle-xmark"></i>
+                <span>Ball (+1)</span>
+              </button>
+              <button type="button" class="pitch-action-btn foul" id="btn-pitch-foul">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>Foul (+1)</span>
+              </button>
+              <button type="button" class="pitch-action-btn inplay" id="btn-pitch-inplay">
+                <i class="fa-solid fa-baseball-bat-ball"></i>
+                <span>In Play (+1)</span>
+              </button>
+            </div>
+
+            <div class="pitch-secondary-actions">
+              <button type="button" class="action-btn" id="btn-pitch-undo">
+                <i class="fa-solid fa-rotate-left"></i> <span>Undo Pitch</span>
+              </button>
+              <button type="button" class="action-btn danger" id="btn-pitch-reset">
+                <i class="fa-solid fa-arrows-rotate"></i> <span>Reset Counter</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Hit Log Panel -->
+          <div class="advanced-panel" id="panel-hitlog">
+            <!-- Step 1: Pick Player -->
+            <div class="log-section">
+              <div class="section-title-row">
+                <span class="step-num">1</span>
+                <span class="section-heading">Select Batter</span>
+              </div>
+              <div class="batter-selector-row">
+                <div class="team-mini-toggle">
+                  <button type="button" class="mini-btn active" id="hit-team-away">Away (Batting)</button>
+                  <button type="button" class="mini-btn" id="hit-team-home">Home</button>
+                </div>
+                <div class="player-input-wrap">
+                  <input type="text" id="hit-player-input" placeholder="Player Name or #" value="#1 Lead-off" maxlength="18" />
+                </div>
+              </div>
+              <div class="quick-player-chips" id="quick-player-chips">
+                <button type="button" class="chip-btn active" data-player="#1 Lead-off">#1</button>
+                <button type="button" class="chip-btn" data-player="#2 Batter">#2</button>
+                <button type="button" class="chip-btn" data-player="#3 Clean-up">#3</button>
+                <button type="button" class="chip-btn" data-player="#4 Power">#4</button>
+                <button type="button" class="chip-btn" data-player="#5 Batter">#5</button>
+                <button type="button" class="chip-btn" data-player="#6 Batter">#6</button>
+                <button type="button" class="chip-btn" data-player="#7 Batter">#7</button>
+                <button type="button" class="chip-btn" data-player="#8 Batter">#8</button>
+                <button type="button" class="chip-btn" data-player="#9 Batter">#9</button>
+              </div>
+            </div>
+
+            <!-- Step 2: Interactive Field Spray Chart -->
+            <div class="log-section">
+              <div class="section-title-row">
+                <span class="step-num">2</span>
+                <span class="section-heading">Tap Where Hit</span>
+                <span class="selected-zone-tag" id="selected-zone-tag">Center Field (CF)</span>
+              </div>
+              <div class="field-diagram-container" id="field-diagram-container">
+                <svg viewBox="0 0 280 230" class="baseball-field-svg" id="baseball-field-svg">
+                  <!-- Outfield Grass Arc -->
+                  <path d="M 20 180 A 180 180 0 0 1 260 180 L 140 215 Z" class="field-grass" />
+                  <!-- Infield Dirt Circle -->
+                  <circle cx="140" cy="165" r="54" class="field-dirt" />
+                  <!-- Infield Grass Diamond -->
+                  <polygon points="140,135 175,165 140,195 105,165" class="field-grass-inner" />
+                  <!-- Foul Lines -->
+                  <line x1="140" y1="215" x2="20" y2="180" class="field-line" />
+                  <line x1="140" y1="215" x2="260" y2="180" class="field-line" />
+                  <!-- Pitcher's Mound -->
+                  <circle cx="140" cy="165" r="6" class="field-mound" />
+                  <!-- Home Plate -->
+                  <polygon points="140,212 136,215 144,215" class="field-plate" />
+                  <!-- Interactive Field Zones -->
+                  <g class="field-zones">
+                    <polygon points="20,180 50,110 110,120 105,165 140,215" class="zone-poly" data-zone="Left Field (LF)" id="zone-lf" />
+                    <polygon points="50,110 140,75 230,110 175,140 140,135 105,140" class="zone-poly active" data-zone="Center Field (CF)" id="zone-cf" />
+                    <polygon points="260,180 230,110 170,120 175,165 140,215" class="zone-poly" data-zone="Right Field (RF)" id="zone-rf" />
+                    <circle cx="120" cy="150" r="16" class="zone-circle" data-zone="Shortstop (SS)" id="zone-ss" />
+                    <circle cx="160" cy="150" r="16" class="zone-circle" data-zone="2nd Base (2B)" id="zone-2b" />
+                    <circle cx="108" cy="175" r="15" class="zone-circle" data-zone="3rd Base (3B)" id="zone-3b" />
+                    <circle cx="172" cy="175" r="15" class="zone-circle" data-zone="1st Base (1B)" id="zone-1b" />
+                    <circle cx="140" cy="165" r="12" class="zone-circle" data-zone="Pitcher (P)" id="zone-p" />
+                  </g>
+                  <!-- Spray Marker Point -->
+                  <circle cx="140" cy="95" r="5" class="spray-marker" id="spray-marker" />
+                </svg>
+              </div>
+            </div>
+
+            <!-- Step 3: Pick Outcome -->
+            <div class="log-section">
+              <div class="section-title-row">
+                <span class="step-num">3</span>
+                <span class="section-heading">Play Outcome</span>
+              </div>
+              <div class="outcomes-grid" id="outcomes-grid">
+                <button type="button" class="outcome-btn hit active" data-outcome="1B Single" data-ishit="true">1B Single</button>
+                <button type="button" class="outcome-btn hit" data-outcome="2B Double" data-ishit="true">2B Double</button>
+                <button type="button" class="outcome-btn hit" data-outcome="3B Triple" data-ishit="true">3B Triple</button>
+                <button type="button" class="outcome-btn hit hr" data-outcome="Home Run (HR)" data-ishit="true">Home Run</button>
+                <button type="button" class="outcome-btn out" data-outcome="Flyout" data-ishit="false">Flyout</button>
+                <button type="button" class="outcome-btn out" data-outcome="Groundout" data-ishit="false">Groundout</button>
+                <button type="button" class="outcome-btn out" data-outcome="Lineout" data-ishit="false">Lineout</button>
+                <button type="button" class="outcome-btn misc" data-outcome="Error (E)" data-ishit="false">Error</button>
+                <button type="button" class="outcome-btn misc" data-outcome="Walk (BB)" data-ishit="false">Walk</button>
+                <button type="button" class="outcome-btn out" data-outcome="Strikeout (K)" data-ishit="false">Strikeout</button>
+              </div>
+            </div>
+
+            <!-- Save Hit Button -->
+            <button type="button" class="log-hit-commit-btn" id="btn-log-hit-commit">
+              <i class="fa-solid fa-plus"></i> <span>Record Play to Log</span>
+            </button>
+
+            <!-- Hit Log History -->
+            <div class="hit-log-history-card">
+              <div class="history-card-header">
+                <span>Recent Plays (<span id="hit-log-count">0</span>)</span>
+                <button type="button" class="clear-log-btn" id="clear-log-btn" title="Clear Hit Log">Clear</button>
+              </div>
+              <div class="hit-log-list" id="hit-log-list">
+                <div class="empty-log-notice">No hits or plays recorded yet. Tap above to log plays!</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Box Score Panel -->
+          <div class="advanced-panel" id="panel-boxscore">
+            <div class="box-score-card">
+              <div class="box-score-table-wrap">
+                <table class="linescore-table" id="linescore-table">
+                  <thead>
+                    <tr>
+                      <th class="team-cell">Team</th>
+                      <th>1</th>
+                      <th>2</th>
+                      <th>3</th>
+                      <th>4</th>
+                      <th>5</th>
+                      <th>6</th>
+                      <th>7</th>
+                      <th>8</th>
+                      <th>9</th>
+                      <th class="stat-head">R</th>
+                      <th class="stat-head">H</th>
+                      <th class="stat-head">E</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr id="linescore-away-row">
+                      <td class="team-cell" id="linescore-away-name">Away</td>
+                      <td class="inn-cell" data-team="away" data-inn="1">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="2">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="3">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="4">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="5">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="6">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="7">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="8">0</td>
+                      <td class="inn-cell" data-team="away" data-inn="9">0</td>
+                      <td class="total-stat runs" id="box-away-runs">0</td>
+                      <td class="total-stat" id="box-away-hits">0</td>
+                      <td class="total-stat" id="box-away-errors">0</td>
+                    </tr>
+                    <tr id="linescore-home-row">
+                      <td class="team-cell" id="linescore-home-name">Home</td>
+                      <td class="inn-cell" data-team="home" data-inn="1">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="2">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="3">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="4">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="5">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="6">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="7">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="8">0</td>
+                      <td class="inn-cell" data-team="home" data-inn="9">0</td>
+                      <td class="total-stat runs" id="box-home-runs">4</td>
+                      <td class="total-stat" id="box-home-hits">0</td>
+                      <td class="total-stat" id="box-home-errors">0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Error Management -->
+            <div class="settings-group">
+              <label class="group-label">Team Errors Tracker</label>
+              <div class="errors-stepper-row">
+                <div class="error-stepper-card">
+                  <span class="stepper-team" id="err-home-label">Home</span>
+                  <div class="stepper-controls">
+                    <button type="button" class="mini-circle-btn" id="err-home-minus">-</button>
+                    <span class="stepper-val" id="err-home-val">0</span>
+                    <button type="button" class="mini-circle-btn" id="err-home-plus">+</button>
+                  </div>
+                </div>
+                <div class="error-stepper-card">
+                  <span class="stepper-team" id="err-away-label">Away</span>
+                  <div class="stepper-controls">
+                    <button type="button" class="mini-circle-btn" id="err-away-minus">-</button>
+                    <span class="stepper-val" id="err-away-val">0</span>
+                    <button type="button" class="mini-circle-btn" id="err-away-plus">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. Finish Game Pictureized Summary Panel -->
+          <div class="advanced-panel" id="panel-finish">
+            <!-- Action Bar to Finalize Match -->
+            <div class="finish-game-header-bar">
+              <button type="button" class="finish-game-action-btn" id="btn-finish-game-toggle">
+                <i class="fa-solid fa-flag-checkered"></i>
+                <span id="finish-game-btn-text">Finish & Finalize Game</span>
+              </button>
+            </div>
+
+            <!-- The Pictureized Card for Graphic Export -->
+            <div class="picture-summary-card" id="picture-summary-card">
+              <div class="card-brand-header">
+                <div class="brand-left">
+                  <i class="fa-solid fa-baseball"></i>
+                  <span>OFFICIAL GAME RECAP</span>
+                </div>
+                <span class="card-final-tag" id="card-status-tag">FINAL</span>
+              </div>
+
+              <!-- Main Big Score Banner -->
+              <div class="card-matchup-banner">
+                <div class="card-team-side" id="card-team-home-wrap">
+                  <span class="card-team-title" id="card-home-name">HOME</span>
+                  <span class="card-team-score" id="card-home-score">4</span>
+                </div>
+                <div class="card-vs-divider">
+                  <span class="card-dash">-</span>
+                </div>
+                <div class="card-team-side" id="card-team-away-wrap">
+                  <span class="card-team-title" id="card-away-name">AWAY</span>
+                  <span class="card-team-score" id="card-away-score">0</span>
+                </div>
+              </div>
+
+              <!-- Mini Line Score inside Card -->
+              <div class="card-linescore-wrap">
+                <table class="card-linescore-table">
+                  <thead>
+                    <tr>
+                      <th>TEAM</th>
+                      <th>R</th>
+                      <th>H</th>
+                      <th>E</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td id="card-line-home">Home</td>
+                      <td class="bold" id="card-line-home-r">4</td>
+                      <td id="card-line-home-h">0</td>
+                      <td id="card-line-home-e">0</td>
+                    </tr>
+                    <tr>
+                      <td id="card-line-away">Away</td>
+                      <td class="bold" id="card-line-away-r">0</td>
+                      <td id="card-line-away-h">0</td>
+                      <td id="card-line-away-e">0</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Key Game Stats Bar -->
+              <div class="card-game-stats-bar">
+                <div class="stat-pill">
+                  <i class="fa-regular fa-clock"></i>
+                  <span id="card-duration">00:00:00</span>
+                </div>
+                <div class="stat-pill">
+                  <i class="fa-solid fa-layer-group"></i>
+                  <span id="card-inning-final">Inning 1</span>
+                </div>
+                <div class="stat-pill">
+                  <i class="fa-solid fa-baseball"></i>
+                  <span id="card-total-pitches">0 Pitches</span>
+                </div>
+              </div>
+
+              <div class="card-footer-stamp">
+                <span id="card-date-stamp">SEPTEMBER 25, 2026</span>
+                <span>BASEBALL SCOREKEEPER</span>
+              </div>
+            </div>
+
+            <!-- Picture Card Actions -->
+            <div class="picture-actions-grid">
+              <button type="button" class="export-btn primary" id="btn-download-image">
+                <i class="fa-solid fa-download"></i>
+                <span>Save Card Image</span>
+              </button>
+              <button type="button" class="export-btn" id="btn-copy-card-summary">
+                <i class="fa-solid fa-copy"></i>
+                <span>Copy Summary</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Settings Rollout Drawer & Backdrop -->
     <div class="settings-backdrop" id="settings-backdrop" aria-hidden="true">
@@ -170,6 +554,102 @@
               <button type="button" class="action-btn danger" id="reset-game-btn">
                 <i class="fa-solid fa-arrows-rotate"></i>
                 <span>New Game</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Share Menu Rollout Drawer & Backdrop -->
+    <div class="settings-backdrop" id="share-backdrop" aria-hidden="true">
+      <div class="settings-drawer share-drawer" id="share-drawer" role="dialog" aria-modal="true" aria-labelledby="share-title">
+        <div class="drawer-header">
+          <div class="drawer-handle-bar"></div>
+          <div class="drawer-title-row">
+            <h2 id="share-title"><i class="fa-solid fa-share-nodes"></i> Share Score</h2>
+            <button type="button" class="close-drawer-btn" id="close-share-btn" aria-label="Close Share Menu">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Summary Type Selection -->
+          <div class="settings-group">
+            <label class="group-label">Summary Format</label>
+            <div class="summary-type-grid" id="summary-type-grid">
+              <button type="button" class="summary-card active" data-format="basic">
+                <i class="fa-solid fa-calculator"></i>
+                <div class="summary-card-info">
+                  <span class="summary-card-name">Basic Score</span>
+                  <span class="summary-card-desc">Quick team scores</span>
+                </div>
+              </button>
+              <button type="button" class="summary-card" data-format="standard">
+                <i class="fa-solid fa-baseball-bat-ball"></i>
+                <div class="summary-card-info">
+                  <span class="summary-card-name">Game Status</span>
+                  <span class="summary-card-desc">Scores, Inning & Outs</span>
+                </div>
+              </button>
+              <button type="button" class="summary-card" data-format="box">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <div class="summary-card-info">
+                  <span class="summary-card-name">Box Score</span>
+                  <span class="summary-card-desc">Scores, Outs & Clock</span>
+                </div>
+              </button>
+              <button type="button" class="summary-card" data-format="broadcast">
+                <i class="fa-solid fa-bullhorn"></i>
+                <div class="summary-card-info">
+                  <span class="summary-card-name">Live Sportscast</span>
+                  <span class="summary-card-desc">Narrative game post</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Live Preview Box -->
+          <div class="settings-group">
+            <div class="preview-header-row">
+              <label class="group-label">Message Preview</label>
+              <button type="button" class="copy-preview-btn" id="copy-preview-btn" title="Copy preview text">
+                <i class="fa-solid fa-copy"></i> <span>Copy</span>
+              </button>
+            </div>
+            <div class="share-preview-box" id="share-preview-box">
+              <pre id="share-preview-text">Home 4 - 0 Away</pre>
+            </div>
+          </div>
+
+          <!-- Sharing Channels -->
+          <div class="settings-group">
+            <label class="group-label">Share Options</label>
+            <div class="share-channels-grid">
+              <button type="button" class="share-channel-btn native" id="share-native-btn" title="Share via device apps">
+                <i class="fa-solid fa-arrow-up-from-bracket"></i>
+                <span>Share App</span>
+              </button>
+              <button type="button" class="share-channel-btn sms" id="share-sms-btn" title="Send as Text Message">
+                <i class="fa-solid fa-comment-sms"></i>
+                <span>Text / SMS</span>
+              </button>
+              <button type="button" class="share-channel-btn whatsapp" id="share-whatsapp-btn" title="Share via WhatsApp">
+                <i class="fa-brands fa-whatsapp"></i>
+                <span>WhatsApp</span>
+              </button>
+              <button type="button" class="share-channel-btn twitter" id="share-twitter-btn" title="Post on X (Twitter)">
+                <i class="fa-brands fa-x-twitter"></i>
+                <span>X / Post</span>
+              </button>
+              <button type="button" class="share-channel-btn email" id="share-email-btn" title="Share via Email">
+                <i class="fa-solid fa-envelope"></i>
+                <span>Email</span>
+              </button>
+              <button type="button" class="share-channel-btn copy" id="share-copy-btn" title="Copy to clipboard">
+                <i class="fa-solid fa-copy"></i>
+                <span>Copy All</span>
               </button>
             </div>
           </div>
