@@ -14,13 +14,22 @@
     
     <!-- Top Row Header -->
     <header class="top-row">
-      <button class="icon-btn" id="share-btn" aria-label="Share">
+      <button class="icon-btn" id="share-btn" aria-label="Share Game Score" title="Share Game Score">
         <i class="fa-solid fa-share-nodes"></i>
       </button>
       
-      <div class="timer-display" id="timer">00:00:00</div>
+      <!-- Interactive Timer Display -->
+      <div class="timer-display" id="timer-display" title="Tap to pause/resume; swipe down to reset">
+        <button type="button" class="timer-btn" id="timer-toggle-btn" aria-label="Pause or Resume Timer" title="Pause / Resume">
+          <i class="fa-solid fa-pause" id="timer-icon"></i>
+        </button>
+        <span class="timer-digits" id="timer">00:00:00</span>
+        <button type="button" class="timer-btn reset-btn" id="timer-reset-btn" aria-label="Reset Timer" title="Reset Timer">
+          <i class="fa-solid fa-rotate-left"></i>
+        </button>
+      </div>
       
-      <button class="icon-btn" id="settings-btn" aria-label="Settings">
+      <button class="icon-btn" id="settings-btn" aria-label="Game Settings" title="Settings & Themes">
         <i class="fa-solid fa-gear"></i>
       </button>
     </header>
@@ -32,16 +41,18 @@
         <span class="score-dash">-</span>
         <button class="score-num" id="away-score" title="Tap or swipe up to add run; swipe down to remove">0</button>
       </div>
-      <div class="labels">
-        <span class="team-label" id="home-label">Home</span>
-        <span class="team-label" id="away-label">Away</span>
+      <div class="labels" id="team-labels-container">
+        <span class="team-label" id="home-label" title="Click to set Home on offense">Home</span>
+        <span class="team-label" id="away-label" title="Click to set Away on offense">Away</span>
+        <!-- Physical Sliding Underline Indicator -->
+        <div class="sliding-underline" id="batting-underline" aria-hidden="true"></div>
       </div>
     </main>
 
     <!-- Inning Transition / Side Retired Visual Indicator -->
     <div class="inning-transition-toast" id="inning-toast" role="status" aria-live="polite">
       <span class="toast-badge" id="toast-badge">3 OUTS</span>
-      <span class="toast-text" id="toast-message">TOP 1 → BOT 1</span>
+      <span class="toast-text" id="toast-message">CHANGE SIDES</span>
     </div>
 
     <!-- Bottom Controls Row -->
@@ -66,6 +77,105 @@
         </div>
       </div>
     </footer>
+
+    <!-- Settings Rollout Drawer & Backdrop -->
+    <div class="settings-backdrop" id="settings-backdrop" aria-hidden="true">
+      <div class="settings-drawer" id="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+        <div class="drawer-header">
+          <div class="drawer-handle-bar"></div>
+          <div class="drawer-title-row">
+            <h2 id="settings-title"><i class="fa-solid fa-sliders"></i> Settings</h2>
+            <button type="button" class="close-drawer-btn" id="close-settings-btn" aria-label="Close Settings">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-body">
+          <!-- Themes Grid -->
+          <div class="settings-group">
+            <label class="group-label">Themes</label>
+            <div class="themes-grid" id="themes-grid">
+              <button type="button" class="theme-card active" data-theme="light">
+                <span class="theme-preview theme-light-preview">
+                  <span class="preview-dot"></span>
+                </span>
+                <span class="theme-title">Classic</span>
+              </button>
+              <button type="button" class="theme-card" data-theme="dark">
+                <span class="theme-preview theme-dark-preview">
+                  <span class="preview-dot"></span>
+                </span>
+                <span class="theme-title">Night Game</span>
+              </button>
+              <button type="button" class="theme-card" data-theme="ballpark">
+                <span class="theme-preview theme-ballpark-preview">
+                  <span class="preview-dot"></span>
+                </span>
+                <span class="theme-title">Ballpark</span>
+              </button>
+              <button type="button" class="theme-card" data-theme="royal">
+                <span class="theme-preview theme-royal-preview">
+                  <span class="preview-dot"></span>
+                </span>
+                <span class="theme-title">Royal Navy</span>
+              </button>
+              <button type="button" class="theme-card" data-theme="vintage">
+                <span class="theme-preview theme-vintage-preview">
+                  <span class="preview-dot"></span>
+                </span>
+                <span class="theme-title">Vintage</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Team Names -->
+          <div class="settings-group">
+            <label class="group-label">Team Names</label>
+            <div class="team-inputs-row">
+              <div class="input-block">
+                <label for="home-name-input">Home</label>
+                <input type="text" id="home-name-input" value="Home" maxlength="10" autocomplete="off" />
+              </div>
+              <div class="input-block">
+                <label for="away-name-input">Away</label>
+                <input type="text" id="away-name-input" value="Away" maxlength="10" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Timer Actions -->
+          <div class="settings-group">
+            <label class="group-label">Game Clock</label>
+            <div class="actions-row">
+              <button type="button" class="action-btn" id="modal-timer-toggle-btn">
+                <i class="fa-solid fa-pause" id="modal-timer-icon"></i>
+                <span id="modal-timer-text">Pause Clock</span>
+              </button>
+              <button type="button" class="action-btn reset" id="modal-timer-reset-btn">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span>Reset (00:00)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Game Reset Actions -->
+          <div class="settings-group">
+            <label class="group-label">Match Management</label>
+            <div class="actions-row">
+              <button type="button" class="action-btn" id="clear-runs-btn">
+                <i class="fa-solid fa-eraser"></i>
+                <span>Clear Runs</span>
+              </button>
+              <button type="button" class="action-btn danger" id="reset-game-btn">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <span>New Game</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 
