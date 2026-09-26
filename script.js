@@ -1,4 +1,4 @@
-// script.js - Baseball Scorekeeper with Arrow Top/Bottom Indicator & Swipe Gestures
+// script.js - Baseball Scorekeeper with Themes, Sliding Underline & Smooth Gestures
 
 document.addEventListener('DOMContentLoaded', () => {
   // Game State
@@ -7,13 +7,28 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentInning = 1;
   let isTopInning = true;
   let currentOuts = 0;
+  let homeTeamName = 'Home';
+  let awayTeamName = 'Away';
+
+  // Timer State
+  let secondsElapsed = 0;
+  let isTimerRunning = true;
+  let timerInterval = null;
 
   // DOM Elements - Scores & Teams
   const homeScoreEl = document.getElementById('home-score');
   const awayScoreEl = document.getElementById('away-score');
   const homeLabelEl = document.getElementById('home-label');
   const awayLabelEl = document.getElementById('away-label');
+  const teamLabelsContainer = document.getElementById('team-labels-container');
+  const battingUnderline = document.getElementById('batting-underline');
+
+  // DOM Elements - Timer
+  const timerDisplay = document.getElementById('timer-display');
   const timerEl = document.getElementById('timer');
+  const timerToggleBtn = document.getElementById('timer-toggle-btn');
+  const timerResetBtn = document.getElementById('timer-reset-btn');
+  const timerIcon = document.getElementById('timer-icon');
 
   // DOM Elements - Inning & Half Arrows
   const inningValEl = document.getElementById('inning-val');
@@ -25,10 +40,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const outsContainer = document.getElementById('outs-container');
   const outCircles = document.querySelectorAll('.out-circle');
 
-  // --- Visual Feedback & Toast Utilities ---
+  // DOM Elements - Settings Modal & Drawer
+  const settingsBtn = document.getElementById('settings-btn');
+  const settingsBackdrop = document.getElementById('settings-backdrop');
+  const settingsDrawer = document.getElementById('settings-drawer');
+  const closeSettingsBtn = document.getElementById('close-settings-btn');
+  const shareBtn = document.getElementById('share-btn');
+  const themeCards = document.querySelectorAll('.theme-card');
+  const homeNameInput = document.getElementById('home-name-input');
+  const awayNameInput = document.getElementById('away-name-input');
+  const modalTimerToggleBtn = document.getElementById('modal-timer-toggle-btn');
+  const modalTimerResetBtn = document.getElementById('modal-timer-reset-btn');
+  const modalTimerIcon = document.getElementById('modal-timer-icon');
+  const modalTimerText = document.getElementById('modal-timer-text');
+  const clearRunsBtn = document.getElementById('clear-runs-btn');
+  const resetGameBtn = document.getElementById('reset-game-btn');
+
+  // Timeouts
   let sideChangeTimeout = null;
   let toastHideTimeout = null;
 
+  // --- Visual Feedback & Toast Utilities ---
   function triggerPop(element) {
     if (!element) return;
     element.classList.remove('pop-feedback');
@@ -50,8 +82,30 @@ document.addEventListener('DOMContentLoaded', () => {
     clearTimeout(toastHideTimeout);
     toastHideTimeout = setTimeout(() => {
       toast.classList.remove('show');
-    }, 1600);
+    }, 1700);
   }
+
+  // --- Smooth Sliding Underline Positioner ---
+  function updateUnderlinePosition() {
+    if (!teamLabelsContainer || !battingUnderline || !awayLabelEl || !homeLabelEl) return;
+
+    const targetLabel = isTopInning ? awayLabelEl : homeLabelEl;
+    const containerRect = teamLabelsContainer.getBoundingClientRect();
+    const labelRect = targetLabel.getBoundingClientRect();
+
+    if (containerRect.width === 0 || labelRect.width === 0) return;
+
+    const leftOffset = labelRect.left - containerRect.left;
+    const labelWidth = labelRect.width;
+
+    battingUnderline.style.width = `${labelWidth}px`;
+    battingUnderline.style.transform = `translateX(${leftOffset}px)`;
+  }
+
+  // Recalculate underline on resize & font loads
+  window.addEventListener('resize', updateUnderlinePosition);
+  setTimeout(updateUnderlinePosition, 100);
+  setTimeout(updateUnderlinePosition, 400);
 
   // --- Automatic 3-Outs Side Change Logic ---
   function handleThreeOuts() {
@@ -114,11 +168,14 @@ document.addEventListener('DOMContentLoaded', () => {
       inningDownBtn.title = !isTopInning ? 'Bottom of Inning (active) - click to -1 Inning' : 'Click to set Bottom of Inning';
     }
 
-    // Clean batting indicator: Away bats in Top, Home bats in Bottom
+    // Batting indicator: Away bats in Top, Home bats in Bottom
     if (awayLabelEl && homeLabelEl) {
       awayLabelEl.classList.toggle('batting', isTopInning);
       homeLabelEl.classList.toggle('batting', !isTopInning);
     }
+
+    // Smoothly slide the underline across
+    requestAnimationFrame(updateUnderlinePosition);
   }
 
   function incrementInning() {
@@ -172,6 +229,18 @@ document.addEventListener('DOMContentLoaded', () => {
     inningDownBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       setInningHalf(false);
+    });
+  }
+
+  // Clicking team names toggles offense/half directly
+  if (homeLabelEl) {
+    homeLabelEl.addEventListener('click', () => {
+      setInningHalf(false); // Bottom of inning (Home bats)
+    });
+  }
+  if (awayLabelEl) {
+    awayLabelEl.addEventListener('click', () => {
+      setInningHalf(true); // Top of inning (Away bats)
     });
   }
 
@@ -279,7 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let startTime = 0;
 
     element.addEventListener('pointerdown', (e) => {
-      // Ignore right clicks for gestures
       if (e.button !== 0 && e.pointerType === 'mouse') return;
       startX = e.clientX;
       startY = e.clientY;
@@ -310,7 +378,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const diffX = e.clientX - startX;
       const diffY = e.clientY - startY;
       const elapsed = Date.now() - startTime;
-      const threshold = 18; // Distance in px to trigger swipe
+      const threshold = 18; // px
 
       if (Math.abs(diffY) >= threshold && Math.abs(diffY) >= Math.abs(diffX)) {
         if (diffY < 0 && onSwipeUp) {
@@ -330,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      // If user simply tapped without swiping
       if (!moved && elapsed < 400 && onTap) {
         onTap(e);
       }
@@ -344,42 +411,30 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Attach Gestures to Components ---
-
-  // 1. Home Score: Tap / Swipe Up = +1 Run; Swipe Down = -1 Run
   setupSwipeGestures(homeScoreEl, {
     onSwipeUp: () => changeHomeScore(+1),
     onSwipeDown: () => changeHomeScore(-1),
     onTap: () => changeHomeScore(+1),
   });
 
-  // 2. Away Score: Tap / Swipe Up = +1 Run; Swipe Down = -1 Run
   setupSwipeGestures(awayScoreEl, {
     onSwipeUp: () => changeAwayScore(+1),
     onSwipeDown: () => changeAwayScore(-1),
     onTap: () => changeAwayScore(+1),
   });
 
-  // 3. Inning Container & Number:
-  //    - Tap / Swipe Up = +1 Inning
-  //    - Swipe Down = -1 Inning (removes inning)
-  //    - Swipe Left / Right = Toggle Top/Bottom
   setupSwipeGestures(inningContainer, {
     onSwipeUp: () => incrementInning(),
     onSwipeDown: () => decrementInning(),
     onSwipeLeft: () => toggleInningHalf(),
     onSwipeRight: () => toggleInningHalf(),
     onTap: (e) => {
-      // If clicked on arrows, arrow listeners handled it; if clicked on number/container, increment inning
       if (!e.target.closest('.arrow-btn')) {
         incrementInning();
       }
     },
   });
 
-  // 4. Outs Container:
-  //    - Swipe Up / Right = +1 Out
-  //    - Swipe Down / Left = -1 Out (removes out)
-  //    - Tap container background = +1 Out (cycle)
   setupSwipeGestures(outsContainer, {
     onSwipeUp: () => changeOuts(+1),
     onSwipeRight: () => changeOuts(+1),
@@ -392,12 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     },
   });
 
-  // --- Initialize UI State ---
-  updateInningDisplay();
-  updateOutsDisplay();
-
-  // --- Stopwatch Timer ---
-  let secondsElapsed = 0;
+  // --- Stopwatch Timer Controls (Pause & Reset) ---
   function formatTime(totalSeconds) {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -406,10 +456,235 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${pad(hrs)}:${pad(mins)}:${pad(secs)}`;
   }
 
-  if (timerEl) {
-    setInterval(() => {
-      secondsElapsed++;
-      timerEl.textContent = formatTime(secondsElapsed);
+  function startTimer() {
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+      if (isTimerRunning) {
+        secondsElapsed++;
+        if (timerEl) timerEl.textContent = formatTime(secondsElapsed);
+      }
     }, 1000);
   }
+
+  function toggleTimer() {
+    isTimerRunning = !isTimerRunning;
+    if (timerDisplay) {
+      timerDisplay.classList.toggle('paused', !isTimerRunning);
+    }
+    if (timerIcon) {
+      timerIcon.className = isTimerRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    }
+    if (modalTimerIcon) {
+      modalTimerIcon.className = isTimerRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    }
+    if (modalTimerText) {
+      modalTimerText.textContent = isTimerRunning ? 'Pause Clock' : 'Resume Clock';
+    }
+    showInningToast('CLOCK', isTimerRunning ? 'RESUMED' : 'PAUSED');
+  }
+
+  function resetTimer() {
+    secondsElapsed = 0;
+    if (timerEl) {
+      timerEl.textContent = formatTime(0);
+      triggerPop(timerDisplay);
+    }
+    showInningToast('CLOCK', 'RESET (00:00:00)');
+  }
+
+  startTimer();
+
+  if (timerToggleBtn) {
+    timerToggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleTimer();
+    });
+  }
+
+  if (timerResetBtn) {
+    timerResetBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      resetTimer();
+    });
+  }
+
+  // Tapping timer body toggles pause/resume; swipe down resets
+  setupSwipeGestures(timerDisplay, {
+    onSwipeDown: () => resetTimer(),
+    onTap: (e) => {
+      if (!e.target.closest('.timer-btn')) {
+        toggleTimer();
+      }
+    },
+  });
+
+  if (timerDisplay) {
+    timerDisplay.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      resetTimer();
+    });
+  }
+
+  // --- Settings Menu Rollout & Modal Management ---
+  function openSettings() {
+    if (!settingsBackdrop) return;
+    settingsBackdrop.classList.add('open');
+    settingsBackdrop.setAttribute('aria-hidden', 'false');
+    if (settingsBtn) {
+      settingsBtn.classList.add('spinning');
+      setTimeout(() => settingsBtn.classList.remove('spinning'), 500);
+    }
+    // Sync modal timer state
+    if (modalTimerText) {
+      modalTimerText.textContent = isTimerRunning ? 'Pause Clock' : 'Resume Clock';
+    }
+    if (modalTimerIcon) {
+      modalTimerIcon.className = isTimerRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
+    }
+  }
+
+  function closeSettings() {
+    if (!settingsBackdrop) return;
+    settingsBackdrop.classList.remove('open');
+    settingsBackdrop.setAttribute('aria-hidden', 'true');
+    // Ensure underline repositioned
+    setTimeout(updateUnderlinePosition, 100);
+  }
+
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', openSettings);
+  }
+
+  if (closeSettingsBtn) {
+    closeSettingsBtn.addEventListener('click', closeSettings);
+  }
+
+  if (settingsBackdrop) {
+    settingsBackdrop.addEventListener('click', (e) => {
+      if (e.target === settingsBackdrop) {
+        closeSettings();
+      }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && settingsBackdrop && settingsBackdrop.classList.contains('open')) {
+      closeSettings();
+    }
+  });
+
+  // Modal timer buttons
+  if (modalTimerToggleBtn) {
+    modalTimerToggleBtn.addEventListener('click', () => {
+      toggleTimer();
+    });
+  }
+
+  if (modalTimerResetBtn) {
+    modalTimerResetBtn.addEventListener('click', () => {
+      resetTimer();
+    });
+  }
+
+  // --- Theme Management ---
+  function applyTheme(themeName) {
+    document.body.setAttribute('data-theme', themeName);
+    localStorage.setItem('baseball_theme', themeName);
+
+    themeCards.forEach((card) => {
+      const isCardActive = card.getAttribute('data-theme') === themeName;
+      card.classList.toggle('active', isCardActive);
+    });
+
+    // Animate underline to fit theme colors smoothly
+    requestAnimationFrame(updateUnderlinePosition);
+  }
+
+  themeCards.forEach((card) => {
+    card.addEventListener('click', () => {
+      const theme = card.getAttribute('data-theme');
+      if (theme) applyTheme(theme);
+    });
+  });
+
+  // Load saved theme or default
+  const savedTheme = localStorage.getItem('baseball_theme') || 'light';
+  applyTheme(savedTheme);
+
+  // --- Team Name Inputs ---
+  if (homeNameInput) {
+    homeNameInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || 'Home';
+      homeTeamName = val;
+      if (homeLabelEl) homeLabelEl.textContent = val;
+      updateUnderlinePosition();
+    });
+  }
+
+  if (awayNameInput) {
+    awayNameInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || 'Away';
+      awayTeamName = val;
+      if (awayLabelEl) awayLabelEl.textContent = val;
+      updateUnderlinePosition();
+    });
+  }
+
+  // --- Quick Reset Actions ---
+  if (clearRunsBtn) {
+    clearRunsBtn.addEventListener('click', () => {
+      homeScoreVal = 0;
+      awayScoreVal = 0;
+      if (homeScoreEl) homeScoreEl.textContent = '0';
+      if (awayScoreEl) awayScoreEl.textContent = '0';
+      triggerPop(homeScoreEl);
+      triggerPop(awayScoreEl);
+      showInningToast('RUNS', 'RESET (0 - 0)');
+      closeSettings();
+    });
+  }
+
+  if (resetGameBtn) {
+    resetGameBtn.addEventListener('click', () => {
+      homeScoreVal = 0;
+      awayScoreVal = 0;
+      currentInning = 1;
+      isTopInning = true;
+      currentOuts = 0;
+      secondsElapsed = 0;
+
+      if (homeScoreEl) homeScoreEl.textContent = '0';
+      if (awayScoreEl) awayScoreEl.textContent = '0';
+      if (timerEl) timerEl.textContent = formatTime(0);
+
+      clearTimeout(sideChangeTimeout);
+      updateInningDisplay();
+      updateOutsDisplay();
+
+      showInningToast('GAME', 'NEW GAME STARTED');
+      closeSettings();
+    });
+  }
+
+  // --- Share Button ---
+  if (shareBtn) {
+    shareBtn.addEventListener('click', () => {
+      const halfName = isTopInning ? 'Top' : 'Bottom';
+      const shareText = `⚾ ${homeTeamName} ${homeScoreVal} - ${awayTeamName} ${awayScoreVal} (${halfName} of Inning ${currentInning}, ${currentOuts} Out${currentOuts === 1 ? '' : 's'})`;
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareText).then(() => {
+          showInningToast('COPIED', `${homeTeamName} ${homeScoreVal} - ${awayTeamName} ${awayScoreVal}`);
+        }).catch(() => {
+          showInningToast('SCORE', `${homeTeamName} ${homeScoreVal} - ${awayTeamName} ${awayScoreVal}`);
+        });
+      } else {
+        showInningToast('SCORE', `${homeTeamName} ${homeScoreVal} - ${awayTeamName} ${awayScoreVal}`);
+      }
+    });
+  }
+
+  // --- Initial Render ---
+  updateInningDisplay();
+  updateOutsDisplay();
 });
