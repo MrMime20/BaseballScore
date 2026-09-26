@@ -1047,20 +1047,78 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- 2. Pitch Counter Logic ---
-  let activePitcher = 'home';
+  // --- 2. Pitch Counter Logic (Simple & Advanced, Scoreboard Integration) ---
+  let pitchCounterEnabled = localStorage.getItem('pitch_counter_enabled') === 'true';
+  let pitchCounterMode = localStorage.getItem('pitch_counter_mode') || 'simple'; // 'simple' or 'advanced'
+  let activePitcherTeam = 'home';
+
+  // Pitcher Names (persisted in localStorage)
+  let pitcherNames = {
+    home: 'Nathan Eovaldi #17',
+    away: 'Yoshinobu Yamamoto #18'
+  };
+  try {
+    const savedPitchers = JSON.parse(localStorage.getItem('pitcher_names_v2'));
+    if (savedPitchers) {
+      if (savedPitchers.home) pitcherNames.home = savedPitchers.home;
+      if (savedPitchers.away) pitcherNames.away = savedPitchers.away;
+    }
+  } catch (_) {}
+
+  function savePitcherNames() {
+    try {
+      localStorage.setItem('pitcher_names_v2', JSON.stringify(pitcherNames));
+    } catch (_) {}
+  }
+
   const pitchData = {
     home: { total: 0, strikes: 0, balls: 0, fouls: 0, inplay: 0, history: [] },
     away: { total: 0, strikes: 0, balls: 0, fouls: 0, inplay: 0, history: [] }
   };
 
+  // Main Screen Widget DOM Elements
+  const mainPitchWidget = document.getElementById('main-pitch-widget');
+  const mainPitcherToggleBtn = document.getElementById('main-pitcher-toggle-btn');
+  const mainPitchTeamBadge = document.getElementById('main-pitch-team-badge');
+  const mainPitcherName = document.getElementById('main-pitcher-name');
+  const mainPitchModePill = document.getElementById('main-pitch-mode-pill');
+  const mainPitchExpandBtn = document.getElementById('main-pitch-expand-btn');
+  const mainPitchSimpleView = document.getElementById('main-pitch-simple-view');
+  const mainPitchAdvView = document.getElementById('main-pitch-adv-view');
+  const mainPitchNumSimple = document.getElementById('main-pitch-num-simple');
+  const mainPitchNumAdv = document.getElementById('main-pitch-num-adv');
+  const mainSimpleAddBtn = document.getElementById('main-simple-add-btn');
+  const mainSimpleUndoBtn = document.getElementById('main-simple-undo-btn');
+  const mainAdvStrikes = document.getElementById('main-adv-strikes');
+  const mainAdvBalls = document.getElementById('main-adv-balls');
+  const mainAdvPct = document.getElementById('main-adv-pct');
+  const mainAdvBtnStrike = document.getElementById('main-adv-btn-strike');
+  const mainAdvBtnBall = document.getElementById('main-adv-btn-ball');
+  const mainAdvBtnFoul = document.getElementById('main-adv-btn-foul');
+  const mainAdvBtnInplay = document.getElementById('main-adv-btn-inplay');
+  const mainAdvBtnUndo = document.getElementById('main-adv-btn-undo');
+
+  // Drawer Panel Pitch Elements
+  const togglePitchScoreboard = document.getElementById('toggle-pitch-scoreboard');
+  const settingsPitchScoreboardToggle = document.getElementById('settings-pitch-scoreboard-toggle');
+  const pitchModeSimpleBtn = document.getElementById('pitch-mode-simple-btn');
+  const pitchModeAdvBtn = document.getElementById('pitch-mode-adv-btn');
+  const settingsPitchModeSimple = document.getElementById('settings-pitch-mode-simple');
+  const settingsPitchModeAdv = document.getElementById('settings-pitch-mode-adv');
   const pitchTeamHome = document.getElementById('pitch-team-home');
   const pitchTeamAway = document.getElementById('pitch-team-away');
+  const pitcherNameInput = document.getElementById('pitcher-name-input');
+  const pitcherRosterBtn = document.getElementById('pitcher-roster-btn');
+  const pitchSimpleModeView = document.getElementById('pitch-simple-mode-view');
+  const pitchAdvModeView = document.getElementById('pitch-adv-mode-view');
+  const simplePitchTotalNum = document.getElementById('simple-pitch-total-num');
+  const btnSimplePitchAdd = document.getElementById('btn-simple-pitch-add');
+  const btnSimplePitchUndo = document.getElementById('btn-simple-pitch-undo');
+  const btnSimplePitchReset = document.getElementById('btn-simple-pitch-reset');
   const pitchTotalNum = document.getElementById('pitch-total-num');
   const pitchStrikesNum = document.getElementById('pitch-strikes-num');
   const pitchBallsNum = document.getElementById('pitch-balls-num');
   const pitchPctNum = document.getElementById('pitch-pct-num');
-
   const btnPitchStrike = document.getElementById('btn-pitch-strike');
   const btnPitchBall = document.getElementById('btn-pitch-ball');
   const btnPitchFoul = document.getElementById('btn-pitch-foul');
@@ -1068,82 +1126,250 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnPitchUndo = document.getElementById('btn-pitch-undo');
   const btnPitchReset = document.getElementById('btn-pitch-reset');
 
+  // Enable/Disable Pitch Counter on Main Screen
+  function setPitchCounterEnabled(enabled) {
+    pitchCounterEnabled = Boolean(enabled);
+    try {
+      localStorage.setItem('pitch_counter_enabled', String(pitchCounterEnabled));
+    } catch (_) {}
+
+    if (togglePitchScoreboard) togglePitchScoreboard.checked = pitchCounterEnabled;
+    if (settingsPitchScoreboardToggle) settingsPitchScoreboardToggle.checked = pitchCounterEnabled;
+
+    if (mainPitchWidget) {
+      mainPitchWidget.style.display = pitchCounterEnabled ? 'flex' : 'none';
+      if (pitchCounterEnabled) {
+        triggerPop(mainPitchWidget);
+      }
+    }
+    setTimeout(updateUnderlinePosition, 60);
+  }
+
+  if (togglePitchScoreboard) {
+    togglePitchScoreboard.addEventListener('change', (e) => {
+      setPitchCounterEnabled(e.target.checked);
+      showInningToast('PITCH COUNTER', e.target.checked ? 'Enabled on Scoreboard' : 'Hidden from Scoreboard');
+    });
+  }
+
+  if (settingsPitchScoreboardToggle) {
+    settingsPitchScoreboardToggle.addEventListener('change', (e) => {
+      setPitchCounterEnabled(e.target.checked);
+      showInningToast('PITCH COUNTER', e.target.checked ? 'Enabled on Scoreboard' : 'Hidden from Scoreboard');
+    });
+  }
+
+  // Pitch Counter Mode (Simple vs Advanced)
+  function setPitchCounterMode(mode) {
+    pitchCounterMode = mode === 'advanced' ? 'advanced' : 'simple';
+    try {
+      localStorage.setItem('pitch_counter_mode', pitchCounterMode);
+    } catch (_) {}
+
+    // Update panel mode buttons
+    if (pitchModeSimpleBtn) pitchModeSimpleBtn.classList.toggle('active', pitchCounterMode === 'simple');
+    if (pitchModeAdvBtn) pitchModeAdvBtn.classList.toggle('active', pitchCounterMode === 'advanced');
+    if (settingsPitchModeSimple) settingsPitchModeSimple.classList.toggle('active', pitchCounterMode === 'simple');
+    if (settingsPitchModeAdv) settingsPitchModeAdv.classList.toggle('active', pitchCounterMode === 'advanced');
+
+    // Update mode badge
+    if (mainPitchModePill) mainPitchModePill.textContent = pitchCounterMode.toUpperCase();
+
+    // Toggle views in panel and on main screen
+    if (pitchSimpleModeView) pitchSimpleModeView.style.display = pitchCounterMode === 'simple' ? 'block' : 'none';
+    if (pitchAdvModeView) pitchAdvModeView.style.display = pitchCounterMode === 'advanced' ? 'block' : 'none';
+    if (mainPitchSimpleView) mainPitchSimpleView.style.display = pitchCounterMode === 'simple' ? 'flex' : 'none';
+    if (mainPitchAdvView) mainPitchAdvView.style.display = pitchCounterMode === 'advanced' ? 'flex' : 'none';
+
+    updatePitchDisplay();
+  }
+
+  if (pitchModeSimpleBtn) pitchModeSimpleBtn.addEventListener('click', () => setPitchCounterMode('simple'));
+  if (pitchModeAdvBtn) pitchModeAdvBtn.addEventListener('click', () => setPitchCounterMode('advanced'));
+  if (settingsPitchModeSimple) settingsPitchModeSimple.addEventListener('click', () => setPitchCounterMode('simple'));
+  if (settingsPitchModeAdv) settingsPitchModeAdv.addEventListener('click', () => setPitchCounterMode('advanced'));
+
+  // Switch Active Pitcher Team (Home vs Away)
+  function setActivePitcherTeam(team) {
+    activePitcherTeam = team === 'away' ? 'away' : 'home';
+    updatePitchDisplay();
+  }
+
+  if (pitchTeamHome) pitchTeamHome.addEventListener('click', () => setActivePitcherTeam('home'));
+  if (pitchTeamAway) pitchTeamAway.addEventListener('click', () => setActivePitcherTeam('away'));
+
+  // Main screen widget pitcher button switches pitcher
+  if (mainPitcherToggleBtn) {
+    mainPitcherToggleBtn.addEventListener('click', () => {
+      setActivePitcherTeam(activePitcherTeam === 'home' ? 'away' : 'home');
+      triggerPop(mainPitcherToggleBtn);
+      showInningToast('PITCHER SWAPPED', `Now tracking ${pitcherNames[activePitcherTeam]}`);
+    });
+  }
+
+  if (mainPitchExpandBtn) {
+    mainPitchExpandBtn.addEventListener('click', () => {
+      openAdvancedTools('pitches');
+    });
+  }
+
+  // Pitcher Name Input
+  if (pitcherNameInput) {
+    pitcherNameInput.addEventListener('input', (e) => {
+      const val = e.target.value.trim() || (activePitcherTeam === 'home' ? 'Home Pitcher' : 'Away Pitcher');
+      pitcherNames[activePitcherTeam] = val;
+      savePitcherNames();
+      if (mainPitcherName) mainPitcherName.textContent = val;
+    });
+  }
+
+  // Quick Pitcher Picker from Roster
+  if (pitcherRosterBtn) {
+    pitcherRosterBtn.addEventListener('click', () => {
+      const teamRoster = rosters[activePitcherTeam] || [];
+      const pitchers = teamRoster.filter(p => p.pos === 'P' || p.pos === 'Pitcher');
+      const pickList = pitchers.length > 0 ? pitchers : teamRoster;
+      if (pickList.length === 0) {
+        showInningToast('ROSTER', 'No players on roster yet');
+        return;
+      }
+      const curIndex = pickList.findIndex(p => pitcherNames[activePitcherTeam].includes(p.name));
+      const nextIndex = (curIndex + 1) % pickList.length;
+      const nextP = pickList[nextIndex];
+      const newName = `${nextP.name} #${nextP.num}`;
+      pitcherNames[activePitcherTeam] = newName;
+      savePitcherNames();
+      updatePitchDisplay();
+      showInningToast('PITCHER SELECTED', newName);
+    });
+  }
+
+  // Update All Pitch Display Elements
   function updatePitchDisplay() {
-    const cur = pitchData[activePitcher];
+    const cur = pitchData[activePitcherTeam];
+    const teamName = activePitcherTeam === 'home' ? homeTeamName : awayTeamName;
+    const pitcherName = pitcherNames[activePitcherTeam] || `${teamName} Pitcher`;
+
+    // Simple display numbers
+    if (simplePitchTotalNum) simplePitchTotalNum.textContent = cur.total;
+    if (mainPitchNumSimple) mainPitchNumSimple.textContent = cur.total;
+
+    // Advanced display numbers
     if (pitchTotalNum) pitchTotalNum.textContent = cur.total;
+    if (mainPitchNumAdv) mainPitchNumAdv.textContent = cur.total;
     if (pitchStrikesNum) pitchStrikesNum.textContent = cur.strikes;
     if (pitchBallsNum) pitchBallsNum.textContent = cur.balls;
     const pct = cur.total > 0 ? Math.round((cur.strikes / cur.total) * 100) : 0;
     if (pitchPctNum) pitchPctNum.textContent = `${pct}%`;
+    if (mainAdvStrikes) mainAdvStrikes.textContent = cur.strikes;
+    if (mainAdvBalls) mainAdvBalls.textContent = cur.balls;
+    if (mainAdvPct) mainAdvPct.textContent = `${pct}%`;
 
+    // Team button states
     if (pitchTeamHome) {
-      pitchTeamHome.classList.toggle('active', activePitcher === 'home');
+      pitchTeamHome.classList.toggle('active', activePitcherTeam === 'home');
       pitchTeamHome.textContent = `${homeTeamName} Pitcher`;
     }
     if (pitchTeamAway) {
-      pitchTeamAway.classList.toggle('active', activePitcher === 'away');
+      pitchTeamAway.classList.toggle('active', activePitcherTeam === 'away');
       pitchTeamAway.textContent = `${awayTeamName} Pitcher`;
+    }
+
+    // Main screen widget badges
+    if (mainPitchTeamBadge) {
+      mainPitchTeamBadge.textContent = `${activePitcherTeam.toUpperCase()} P`;
+    }
+    if (mainPitcherName) {
+      mainPitcherName.textContent = pitcherName;
+    }
+    if (pitcherNameInput) {
+      pitcherNameInput.value = pitcherName;
     }
 
     updateRecapCard();
   }
 
+  // Record Pitch Actions
   function recordPitch(type) {
-    const cur = pitchData[activePitcher];
+    const cur = pitchData[activePitcherTeam];
     cur.total++;
-    if (type === 'strike') cur.strikes++;
-    else if (type === 'ball') cur.balls++;
-    else if (type === 'foul') cur.strikes++;
-    else if (type === 'inplay') cur.strikes++;
 
-    cur.history.push(type);
+    if (type === 'strike') {
+      cur.strikes++;
+      cur.history.push('strike');
+    } else if (type === 'ball') {
+      cur.balls++;
+      cur.history.push('ball');
+    } else if (type === 'foul') {
+      cur.strikes++;
+      cur.fouls++;
+      cur.history.push('foul');
+    } else if (type === 'inplay') {
+      cur.strikes++;
+      cur.inplay++;
+      cur.history.push('inplay');
+    } else {
+      // Simple pitch count
+      cur.history.push('pitch');
+    }
+
+    triggerPop(simplePitchTotalNum);
     triggerPop(pitchTotalNum);
+    triggerPop(mainPitchNumSimple);
+    triggerPop(mainPitchNumAdv);
     updatePitchDisplay();
   }
 
   function undoPitch() {
-    const cur = pitchData[activePitcher];
-    if (cur.history.length === 0) {
+    const cur = pitchData[activePitcherTeam];
+    if (cur.history.length === 0 && cur.total === 0) {
       showInningToast('PITCHES', 'No pitches to undo');
       return;
     }
-    const lastType = cur.history.pop();
+
+    const lastType = cur.history.pop() || 'pitch';
     cur.total = Math.max(0, cur.total - 1);
+
     if (lastType === 'strike' || lastType === 'foul' || lastType === 'inplay') {
       cur.strikes = Math.max(0, cur.strikes - 1);
+      if (lastType === 'foul') cur.fouls = Math.max(0, cur.fouls - 1);
+      if (lastType === 'inplay') cur.inplay = Math.max(0, cur.inplay - 1);
     } else if (lastType === 'ball') {
       cur.balls = Math.max(0, cur.balls - 1);
     }
+
+    triggerPop(simplePitchTotalNum);
     triggerPop(pitchTotalNum);
+    triggerPop(mainPitchNumSimple);
+    triggerPop(mainPitchNumAdv);
     updatePitchDisplay();
     showInningToast('UNDO', `Reverted last ${lastType}`);
   }
 
   function resetPitchCounter() {
-    const cur = pitchData[activePitcher];
+    const cur = pitchData[activePitcherTeam];
     cur.total = 0;
     cur.strikes = 0;
     cur.balls = 0;
     cur.fouls = 0;
     cur.inplay = 0;
     cur.history = [];
+
+    triggerPop(simplePitchTotalNum);
     triggerPop(pitchTotalNum);
+    triggerPop(mainPitchNumSimple);
+    triggerPop(mainPitchNumAdv);
     updatePitchDisplay();
-    showInningToast('PITCHES', `${activePitcher === 'home' ? homeTeamName : awayTeamName} counter reset`);
+    showInningToast('RESET', `${pitcherNames[activePitcherTeam]} count cleared`);
   }
 
-  if (pitchTeamHome) {
-    pitchTeamHome.addEventListener('click', () => {
-      activePitcher = 'home';
-      updatePitchDisplay();
-    });
-  }
-  if (pitchTeamAway) {
-    pitchTeamAway.addEventListener('click', () => {
-      activePitcher = 'away';
-      updatePitchDisplay();
-    });
-  }
+  // Pitch Action Event Listeners
+  if (btnSimplePitchAdd) btnSimplePitchAdd.addEventListener('click', () => recordPitch('pitch'));
+  if (btnSimplePitchUndo) btnSimplePitchUndo.addEventListener('click', undoPitch);
+  if (btnSimplePitchReset) btnSimplePitchReset.addEventListener('click', resetPitchCounter);
+  if (mainSimpleAddBtn) mainSimpleAddBtn.addEventListener('click', () => recordPitch('pitch'));
+  if (mainSimpleUndoBtn) mainSimpleUndoBtn.addEventListener('click', undoPitch);
+
   if (btnPitchStrike) btnPitchStrike.addEventListener('click', () => recordPitch('strike'));
   if (btnPitchBall) btnPitchBall.addEventListener('click', () => recordPitch('ball'));
   if (btnPitchFoul) btnPitchFoul.addEventListener('click', () => recordPitch('foul'));
@@ -1151,27 +1377,270 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnPitchUndo) btnPitchUndo.addEventListener('click', undoPitch);
   if (btnPitchReset) btnPitchReset.addEventListener('click', resetPitchCounter);
 
-  // --- 3. Hit Log Logic ---
+  if (mainAdvBtnStrike) mainAdvBtnStrike.addEventListener('click', () => recordPitch('strike'));
+  if (mainAdvBtnBall) mainAdvBtnBall.addEventListener('click', () => recordPitch('ball'));
+  if (mainAdvBtnFoul) mainAdvBtnFoul.addEventListener('click', () => recordPitch('foul'));
+  if (mainAdvBtnInplay) mainAdvBtnInplay.addEventListener('click', () => recordPitch('inplay'));
+  if (mainAdvBtnUndo) mainAdvBtnUndo.addEventListener('click', undoPitch);
+
+  // Initialize pitch counter settings & display
+  setPitchCounterEnabled(pitchCounterEnabled);
+  setPitchCounterMode(pitchCounterMode);
+
+  // --- 3. Hit Log Logic (Configurable Roster, Authentic Spray Chart & Searchable Outcomes) ---
   let hitTeam = 'away';
-  let selectedPlayer = '#1 Lead-off';
+  let selectedPlayerName = 'Mookie Betts #50';
   let selectedZone = 'Center Field (CF)';
-  let selectedOutcome = '1B Single';
-  let selectedIsHit = true;
+  let selectedDistance = 385;
+  let currentSprayCoords = { x: 170, y: 115 };
   let hitLogEntries = [];
 
+  // Team Rosters (Configurable & Saved to localStorage)
+  const defaultRosters = {
+    home: [
+      { id: 1, name: 'Marcus Semien', num: '2', pos: '2B' },
+      { id: 2, name: 'Corey Seager', num: '5', pos: 'SS' },
+      { id: 3, name: 'Evan Carter', num: '32', pos: 'LF' },
+      { id: 4, name: 'Adolis Garcia', num: '53', pos: 'RF' },
+      { id: 5, name: 'Nathaniel Lowe', num: '30', pos: '1B' },
+      { id: 6, name: 'Josh Jung', num: '6', pos: '3B' },
+      { id: 7, name: 'Jonah Heim', num: '28', pos: 'C' },
+      { id: 8, name: 'Leody Taveras', num: '3', pos: 'CF' },
+      { id: 9, name: 'Nathan Eovaldi', num: '17', pos: 'P' }
+    ],
+    away: [
+      { id: 101, name: 'Mookie Betts', num: '50', pos: 'SS' },
+      { id: 102, name: 'Shohei Ohtani', num: '17', pos: 'DH' },
+      { id: 103, name: 'Freddie Freeman', num: '5', pos: '1B' },
+      { id: 104, name: 'Will Smith', num: '16', pos: 'C' },
+      { id: 105, name: 'Max Muncy', num: '13', pos: '3B' },
+      { id: 106, name: 'Teoscar Hernandez', num: '37', pos: 'LF' },
+      { id: 107, name: 'James Outman', num: '33', pos: 'CF' },
+      { id: 108, name: 'Jason Heyward', num: '23', pos: 'RF' },
+      { id: 109, name: 'Yoshinobu Yamamoto', num: '18', pos: 'P' }
+    ]
+  };
+
+  let rosters = defaultRosters;
+  try {
+    const savedRosters = JSON.parse(localStorage.getItem('baseball_rosters_v2'));
+    if (savedRosters && savedRosters.home && savedRosters.away) {
+      rosters = savedRosters;
+    }
+  } catch (_) {}
+
+  function saveRosters() {
+    try {
+      localStorage.setItem('baseball_rosters_v2', JSON.stringify(rosters));
+    } catch (_) {}
+  }
+
+  // Hit Log DOM Elements
   const hitTeamAway = document.getElementById('hit-team-away');
   const hitTeamHome = document.getElementById('hit-team-home');
-  const hitPlayerInput = document.getElementById('hit-player-input');
-  const quickPlayerChips = document.querySelectorAll('#quick-player-chips .chip-btn');
+  const hitPlayerDropdown = document.getElementById('hit-player-dropdown');
+  const btnToggleAddPlayer = document.getElementById('btn-toggle-add-player');
+  const addPlayerBox = document.getElementById('add-player-box');
+  const newPlayerNameInput = document.getElementById('new-player-name');
+  const newPlayerNumInput = document.getElementById('new-player-num');
+  const newPlayerPosSelect = document.getElementById('new-player-pos');
+  const btnSavePlayer = document.getElementById('btn-save-player');
+  const btnCancelAddPlayer = document.getElementById('btn-cancel-add-player');
+  const btnRemovePlayer = document.getElementById('btn-remove-player');
+  const quickPlayerChips = document.getElementById('quick-player-chips');
+
+  // Authentic Spray Chart Elements
   const baseballFieldSvg = document.getElementById('baseball-field-svg');
-  const sprayMarker = document.getElementById('spray-marker');
   const selectedZoneTag = document.getElementById('selected-zone-tag');
-  const outcomeButtons = document.querySelectorAll('.outcome-btn');
+  const activeSprayMarkerGroup = document.getElementById('active-spray-marker-group');
+  const sprayTrajectory = document.getElementById('spray-trajectory');
+  const historicSprayDots = document.getElementById('historic-spray-dots');
+
+  // Searchable Outcome Elements
+  const selectedOutcomeDisplay = document.getElementById('selected-outcome-display');
+  const currentOutcomePill = document.getElementById('current-outcome-pill');
+  const currentOutcomeDesc = document.getElementById('current-outcome-desc');
+  const btnToggleOutcomeDropdown = document.getElementById('btn-toggle-outcome-dropdown');
+  const searchableOutcomeBox = document.getElementById('searchable-outcome-box');
+  const outcomeSearchInput = document.getElementById('outcome-search-input');
+  const clearSearchBtn = document.getElementById('clear-search-btn');
+  const outcomeDropdownList = document.getElementById('outcome-dropdown-list');
+  const quickOutcomeChips = document.querySelectorAll('#quick-outcome-chips .quick-chip');
   const btnLogHitCommit = document.getElementById('btn-log-hit-commit');
   const hitLogList = document.getElementById('hit-log-list');
   const hitLogCount = document.getElementById('hit-log-count');
   const clearLogBtn = document.getElementById('clear-log-btn');
 
+  // Comprehensive Baseball Play Outcomes List (35+ Plays)
+  const baseballOutcomes = [
+    // HITS
+    { name: '1B Single', type: 'hit', isHit: true, desc: 'Clean base hit into outfield or through infield' },
+    { name: '2B Double', type: 'hit', isHit: true, desc: 'Extra-base hit into gap or down the line' },
+    { name: '3B Triple', type: 'hit', isHit: true, desc: 'Extra-base hit to deep warning track or wall' },
+    { name: 'Home Run (HR)', type: 'hit', isHit: true, desc: 'Over-the-fence four-base home run' },
+    { name: 'Inside-the-Park HR', type: 'hit', isHit: true, desc: 'Hit stays in play, batter circles bases and scores' },
+    { name: 'Ground-Rule Double', type: 'hit', isHit: true, desc: 'Bounces over outfield wall for automatic 2B' },
+    { name: 'Infield Single', type: 'hit', isHit: true, desc: 'Batter beats out throw to first base on infield hit' },
+    { name: 'Bunt Single', type: 'hit', isHit: true, desc: 'Deliberate bunt executed for base hit' },
+
+    // OUTS
+    { name: 'Flyout', type: 'out', isHit: false, desc: 'Fly ball caught in the air by outfielder' },
+    { name: 'Groundout', type: 'out', isHit: false, desc: 'Ground ball fielded and thrown to 1B for out' },
+    { name: 'Lineout', type: 'out', isHit: false, desc: 'Sharp line drive caught in air by fielder' },
+    { name: 'Pop Out', type: 'out', isHit: false, desc: 'High pop fly caught by infielder' },
+    { name: 'Strikeout (K)', type: 'out', isHit: false, desc: 'Batter strikes out swinging on strike 3' },
+    { name: 'Strikeout Looking (ꓘ)', type: 'out', isHit: false, desc: 'Called third strike caught in strike zone' },
+    { name: 'Foul Tip Strikeout', type: 'out', isHit: false, desc: 'Foul tip caught directly by catcher with 2 strikes' },
+    { name: '6-4-3 Double Play', type: 'out', isHit: false, desc: 'Grounder to SS, flipped to 2B, on to 1B' },
+    { name: '4-6-3 Double Play', type: 'out', isHit: false, desc: 'Grounder to 2B, flipped to SS, on to 1B' },
+    { name: 'Double Play (Other)', type: 'out', isHit: false, desc: 'Two outs recorded on continuous batted play' },
+    { name: 'Triple Play', type: 'out', isHit: false, desc: 'Three outs executed on continuous batted play' },
+    { name: 'Sacrifice Fly (SF)', type: 'out', isHit: false, desc: 'Deep fly out allowing baserunner to tag and score' },
+    { name: 'Sacrifice Bunt (SAC)', type: 'out', isHit: false, desc: 'Bunt executed to advance baserunners' },
+    { name: 'Fielder\'s Choice Out', type: 'out', isHit: false, desc: 'Defense throws out lead runner on basepaths' },
+    { name: 'Caught Stealing (CS)', type: 'out', isHit: false, desc: 'Runner tagged out attempting to advance/steal' },
+    { name: 'Pickoff Out (PO)', type: 'out', isHit: false, desc: 'Runner tagged out off base on pitcher pickoff' },
+    { name: 'Batter Interference', type: 'out', isHit: false, desc: 'Batter impedes catcher throwing or fielding' },
+
+    // REACHED BASE / MISC
+    { name: 'Walk (BB)', type: 'misc', isHit: false, desc: 'Awarded 1B after 4 pitches outside strike zone' },
+    { name: 'Intentional Walk (IBB)', type: 'misc', isHit: false, desc: 'Pitcher intentionally awards batter 1B' },
+    { name: 'Hit By Pitch (HBP)', type: 'misc', isHit: false, desc: 'Pitched ball strikes batter in batter box' },
+    { name: 'Error (E)', type: 'misc', isHit: false, desc: 'Fielder misplays or overthrows batted ball' },
+    { name: 'Error - Throwing', type: 'misc', isHit: false, desc: 'Fielder wild throw allows batter to reach base' },
+    { name: 'Fielder\'s Choice (FC)', type: 'misc', isHit: false, desc: 'Batter reaches base safely as defense plays runner' },
+    { name: 'Dropped 3rd Strike', type: 'misc', isHit: false, desc: 'Uncaught strike 3, batter beats throw to 1B' },
+    { name: 'Catcher Interference (CI)', type: 'misc', isHit: false, desc: 'Catcher mitt touches bat during swing' },
+    { name: 'Balk (BK)', type: 'misc', isHit: false, desc: 'Illegal pitcher motion advances base runners' },
+    { name: 'Wild Pitch / Passed Ball', type: 'misc', isHit: false, desc: 'Pitch gets away from catcher allowing advance' }
+  ];
+
+  let selectedOutcome = baseballOutcomes[0].name;
+  let selectedIsHit = baseballOutcomes[0].isHit;
+  let selectedOutcomeType = baseballOutcomes[0].type;
+  let selectedOutcomeDesc = baseballOutcomes[0].desc;
+
+  // Render Roster Dropdown & Dynamic Quick Chips
+  function renderRosterUI() {
+    const currentRoster = rosters[hitTeam] || [];
+
+    // Populate dropdown
+    if (hitPlayerDropdown) {
+      hitPlayerDropdown.innerHTML = currentRoster.map((player) => {
+        const label = `${player.name} #${player.num} (${player.pos})`;
+        const selected = label === selectedPlayerName ? 'selected' : '';
+        return `<option value="${label}" ${selected}>${label}</option>`;
+      }).join('');
+
+      if (!currentRoster.some(p => `${p.name} #${p.num} (${p.pos})` === selectedPlayerName) && currentRoster.length > 0) {
+        const first = currentRoster[0];
+        selectedPlayerName = `${first.name} #${first.num} (${first.pos})`;
+        hitPlayerDropdown.value = selectedPlayerName;
+      }
+    }
+
+    // Populate quick chips
+    if (quickPlayerChips) {
+      quickPlayerChips.innerHTML = currentRoster.map((player) => {
+        const label = `${player.name} #${player.num} (${player.pos})`;
+        const isActive = label === selectedPlayerName;
+        return `
+          <button type="button" class="chip-btn ${isActive ? 'active' : ''}" data-player="${label}">
+            #${player.num} ${player.name.split(' ')[1] || player.name}
+          </button>
+        `;
+      }).join('');
+
+      quickPlayerChips.querySelectorAll('.chip-btn').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          quickPlayerChips.querySelectorAll('.chip-btn').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          selectedPlayerName = chip.getAttribute('data-player');
+          if (hitPlayerDropdown) hitPlayerDropdown.value = selectedPlayerName;
+        });
+      });
+    }
+  }
+
+  // Dropdown selection change
+  if (hitPlayerDropdown) {
+    hitPlayerDropdown.addEventListener('change', (e) => {
+      selectedPlayerName = e.target.value;
+      if (quickPlayerChips) {
+        quickPlayerChips.querySelectorAll('.chip-btn').forEach(c => {
+          c.classList.toggle('active', c.getAttribute('data-player') === selectedPlayerName);
+        });
+      }
+    });
+  }
+
+  // Add Player Toggle & Save
+  if (btnToggleAddPlayer) {
+    btnToggleAddPlayer.addEventListener('click', () => {
+      if (!addPlayerBox) return;
+      const isOpen = addPlayerBox.style.display !== 'none';
+      addPlayerBox.style.display = isOpen ? 'none' : 'flex';
+      if (!isOpen && newPlayerNameInput) newPlayerNameInput.focus();
+    });
+  }
+
+  if (btnCancelAddPlayer) {
+    btnCancelAddPlayer.addEventListener('click', () => {
+      if (addPlayerBox) addPlayerBox.style.display = 'none';
+    });
+  }
+
+  if (btnSavePlayer) {
+    btnSavePlayer.addEventListener('click', () => {
+      const name = (newPlayerNameInput && newPlayerNameInput.value.trim());
+      if (!name) {
+        showInningToast('ROSTER', 'Please enter a player name');
+        return;
+      }
+      const rawNum = (newPlayerNumInput && newPlayerNumInput.value.replace(/[^0-9]/g, '')) || '00';
+      const pos = (newPlayerPosSelect && newPlayerPosSelect.value) || 'OF';
+
+      const newPlayer = {
+        id: Date.now(),
+        name: name,
+        num: rawNum,
+        pos: pos
+      };
+
+      rosters[hitTeam].push(newPlayer);
+      saveRosters();
+
+      selectedPlayerName = `${name} #${rawNum} (${pos})`;
+      renderRosterUI();
+
+      if (newPlayerNameInput) newPlayerNameInput.value = '';
+      if (newPlayerNumInput) newPlayerNumInput.value = '';
+      if (addPlayerBox) addPlayerBox.style.display = 'none';
+
+      showInningToast('PLAYER SAVED', `${name} added to ${hitTeam === 'home' ? homeTeamName : awayTeamName} roster`);
+    });
+  }
+
+  // Remove Player
+  if (btnRemovePlayer) {
+    btnRemovePlayer.addEventListener('click', () => {
+      const currentRoster = rosters[hitTeam];
+      if (currentRoster.length <= 1) {
+        showInningToast('ROSTER', 'Roster must have at least one player');
+        return;
+      }
+      const idx = currentRoster.findIndex(p => `${p.name} #${p.num} (${p.pos})` === selectedPlayerName);
+      if (idx !== -1) {
+        const removed = currentRoster.splice(idx, 1)[0];
+        saveRosters();
+        selectedPlayerName = `${currentRoster[0].name} #${currentRoster[0].num} (${currentRoster[0].pos})`;
+        renderRosterUI();
+        showInningToast('REMOVED', `${removed.name} removed from roster`);
+      }
+    });
+  }
+
+  // Hit Team Toggles
   function updateHitTeamUI() {
     if (hitTeamAway) {
       hitTeamAway.classList.toggle('active', hitTeam === 'away');
@@ -1181,6 +1650,7 @@ document.addEventListener('DOMContentLoaded', () => {
       hitTeamHome.classList.toggle('active', hitTeam === 'home');
       hitTeamHome.textContent = homeTeamName;
     }
+    renderRosterUI();
   }
 
   if (hitTeamAway) {
@@ -1196,78 +1666,227 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  quickPlayerChips.forEach((chip) => {
-    chip.addEventListener('click', () => {
-      quickPlayerChips.forEach((c) => c.classList.remove('active'));
-      chip.classList.add('active');
-      const val = chip.getAttribute('data-player');
-      selectedPlayer = val;
-      if (hitPlayerInput) hitPlayerInput.value = val;
-    });
-  });
+  // Authentic Baseball Field Spray Chart Click & Zone Detector
+  function selectFieldSprayPoint(svgX, svgY, manualZone = null) {
+    currentSprayCoords = { x: svgX, y: svgY };
 
-  if (hitPlayerInput) {
-    hitPlayerInput.addEventListener('input', (e) => {
-      selectedPlayer = e.target.value.trim() || '#1';
-    });
-  }
+    // Distance calculation from home plate (170, 285) in authentic ballpark feet
+    const dx = svgX - 170;
+    const dy = svgY - 285;
+    const pixelDist = Math.hypot(dx, dy);
+    // 0 distance at home is ~60 ft, fence is ~400 ft
+    selectedDistance = Math.max(60, Math.min(440, Math.round(pixelDist * 1.7 + 60)));
 
-  // Interactive Field SVG Zone & Spray Marker Placement
-  function selectFieldZone(zoneName, x, y) {
-    selectedZone = zoneName;
-    if (selectedZoneTag) selectedZoneTag.textContent = zoneName;
+    let detected = manualZone;
+    if (!detected) {
+      if (svgY > 260) {
+        detected = 'Catcher / Infield';
+      } else if (svgY > 215) {
+        if (svgX < 135) detected = '3rd Base (3B)';
+        else if (svgX > 205) detected = '1st Base (1B)';
+        else if (Math.abs(svgX - 170) < 22) detected = 'Pitcher (P)';
+        else detected = 'Infield Dirt';
+      } else if (svgY > 175) {
+        if (svgX < 145) detected = 'Shortstop (SS)';
+        else if (svgX > 195) detected = '2nd Base (2B)';
+        else detected = 'Behind 2B';
+      } else if (svgY > 130) {
+        if (svgX < 110) detected = 'Left Field (LF)';
+        else if (svgX > 230) detected = 'Right Field (RF)';
+        else detected = 'Center Field (CF)';
+      } else {
+        // Deep Outfield
+        if (svgX < 115) detected = 'Deep Left (LF)';
+        else if (svgX > 225) detected = 'Deep Right (RF)';
+        else if (svgX < 155) detected = 'Left-Center (LCF)';
+        else if (svgX > 185) detected = 'Right-Center (RCF)';
+        else detected = 'Center Field (CF)';
+      }
+    }
 
+    selectedZone = detected;
+    if (selectedZoneTag) {
+      selectedZoneTag.textContent = `${detected} • ${selectedDistance} ft`;
+    }
+
+    // Move marker & trajectory
+    if (activeSprayMarkerGroup) {
+      activeSprayMarkerGroup.setAttribute('transform', `translate(${svgX}, ${svgY})`);
+    }
+    if (sprayTrajectory) {
+      sprayTrajectory.setAttribute('x1', '170');
+      sprayTrajectory.setAttribute('y1', '285');
+      sprayTrajectory.setAttribute('x2', String(svgX));
+      sprayTrajectory.setAttribute('y2', String(svgY));
+    }
+
+    // Highlight zone poly
     const allZones = document.querySelectorAll('.zone-poly, .zone-circle');
     allZones.forEach((z) => {
-      z.classList.toggle('active', z.getAttribute('data-zone') === zoneName);
+      const zName = z.getAttribute('data-zone') || '';
+      z.classList.toggle('active', zName.includes(detected) || detected.includes(zName));
     });
-
-    if (sprayMarker && x !== undefined && y !== undefined) {
-      sprayMarker.setAttribute('cx', x);
-      sprayMarker.setAttribute('cy', y);
-    }
   }
 
   if (baseballFieldSvg) {
     baseballFieldSvg.addEventListener('click', (e) => {
       const rect = baseballFieldSvg.getBoundingClientRect();
-      const scaleX = 280 / rect.width;
-      const scaleY = 230 / rect.height;
-      const svgX = Math.round(Math.max(10, Math.min(270, (e.clientX - rect.left) * scaleX)));
-      const svgY = Math.round(Math.max(10, Math.min(220, (e.clientY - rect.top) * scaleY)));
+      const scaleX = 340 / rect.width;
+      const scaleY = 320 / rect.height;
+      const svgX = Math.round(Math.max(15, Math.min(325, (e.clientX - rect.left) * scaleX)));
+      const svgY = Math.round(Math.max(30, Math.min(300, (e.clientY - rect.top) * scaleY)));
 
       const targetZone = e.target.closest('[data-zone]');
-      if (targetZone) {
-        const zoneName = targetZone.getAttribute('data-zone');
-        selectFieldZone(zoneName, svgX, svgY);
-      } else {
-        let detected = 'Center Field (CF)';
-        if (svgY > 185) {
-          detected = svgX < 140 ? '3rd Base (3B)' : '1st Base (1B)';
-        } else if (svgY > 155) {
-          if (Math.abs(svgX - 140) < 18) detected = 'Pitcher (P)';
-          else detected = svgX < 140 ? '3rd Base (3B)' : '1st Base (1B)';
-        } else if (svgY > 130) {
-          if (svgX < 135) detected = 'Shortstop (SS)';
-          else if (svgX > 145) detected = '2nd Base (2B)';
-          else detected = 'Pitcher (P)';
-        } else {
-          if (svgX < 100) detected = 'Left Field (LF)';
-          else if (svgX > 180) detected = 'Right Field (RF)';
-          else detected = 'Center Field (CF)';
+      const zoneName = targetZone ? targetZone.getAttribute('data-zone') : null;
+      selectFieldSprayPoint(svgX, svgY, zoneName);
+    });
+  }
+
+  // Historic Spray Chart Dots Renderer
+  function renderHistoricSprayDots() {
+    if (!historicSprayDots) return;
+    if (hitLogEntries.length === 0) {
+      historicSprayDots.innerHTML = '';
+      return;
+    }
+
+    historicSprayDots.innerHTML = hitLogEntries.map((entry) => {
+      let fillColor = '#ef4444';
+      if (entry.outcome.includes('Home Run')) fillColor = '#eab308';
+      else if (entry.outcome.includes('Triple')) fillColor = '#f97316';
+      else if (entry.outcome.includes('Double')) fillColor = '#3b82f6';
+      else if (entry.isHit) fillColor = '#22c55e';
+      else if (entry.outcome.includes('Walk') || entry.outcome.includes('Error')) fillColor = '#a855f7';
+
+      return `
+        <circle cx="${entry.x || 170}" cy="${entry.y || 115}" r="5"
+          fill="${fillColor}" class="historic-dot"
+          data-id="${entry.id}">
+          <title>${entry.outcome} by ${entry.player} (${entry.zone} • ${entry.distance || 0} ft)</title>
+        </circle>
+      `;
+    }).join('');
+
+    historicSprayDots.querySelectorAll('.historic-dot').forEach((dot) => {
+      dot.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = Number(dot.getAttribute('data-id'));
+        const entry = hitLogEntries.find(i => i.id === id);
+        if (entry) {
+          showInningToast(entry.outcome.split(' ')[0], `${entry.player} • ${entry.zone}`);
         }
-        selectFieldZone(detected, svgX, svgY);
+      });
+    });
+  }
+
+  // Searchable Outcome Dropdown Implementation
+  function setPlayOutcome(outcomeObj) {
+    selectedOutcome = outcomeObj.name;
+    selectedIsHit = outcomeObj.isHit;
+    selectedOutcomeType = outcomeObj.type;
+    selectedOutcomeDesc = outcomeObj.desc;
+
+    if (currentOutcomePill) {
+      currentOutcomePill.textContent = selectedOutcome;
+      currentOutcomePill.className = `outcome-badge-pill ${selectedOutcomeType}`;
+    }
+    if (currentOutcomeDesc) {
+      currentOutcomeDesc.textContent = selectedOutcomeDesc;
+    }
+
+    // Sync quick chips
+    quickOutcomeChips.forEach((chip) => {
+      const chipOutcome = chip.getAttribute('data-outcome');
+      chip.classList.toggle('active', chipOutcome === selectedOutcome);
+    });
+
+    if (searchableOutcomeBox) searchableOutcomeBox.classList.remove('open');
+  }
+
+  function renderOutcomeList(query = '') {
+    if (!outcomeDropdownList) return;
+    const lowerQuery = query.toLowerCase().trim();
+
+    const filtered = lowerQuery === ''
+      ? baseballOutcomes
+      : baseballOutcomes.filter(o => o.name.toLowerCase().includes(lowerQuery) || o.desc.toLowerCase().includes(lowerQuery));
+
+    if (filtered.length === 0) {
+      outcomeDropdownList.innerHTML = `<div style="padding: 12px; font-size: 11px; color: var(--text-secondary); text-align: center;">No matching outcomes found for "${query}"</div>`;
+      return;
+    }
+
+    const groups = {
+      'HITS': filtered.filter(o => o.type === 'hit'),
+      'OUTS': filtered.filter(o => o.type === 'out'),
+      'REACHED BASE / MISC': filtered.filter(o => o.type === 'misc')
+    };
+
+    let html = '';
+    for (const [groupName, items] of Object.entries(groups)) {
+      if (items.length === 0) continue;
+      html += `<div class="outcome-group-header">${groupName}</div>`;
+      items.forEach((item) => {
+        const isSelected = item.name === selectedOutcome;
+        html += `
+          <div class="outcome-dropdown-item ${isSelected ? 'selected' : ''}" data-name="${item.name}">
+            <div class="outcome-item-left">
+              <span class="outcome-type-tag ${item.type}">${item.type}</span>
+              <span class="outcome-item-name">${item.name}</span>
+            </div>
+            <span class="outcome-item-desc">${item.desc}</span>
+          </div>
+        `;
+      });
+    }
+
+    outcomeDropdownList.innerHTML = html;
+
+    outcomeDropdownList.querySelectorAll('.outcome-dropdown-item').forEach((itemEl) => {
+      itemEl.addEventListener('click', () => {
+        const name = itemEl.getAttribute('data-name');
+        const match = baseballOutcomes.find(o => o.name === name);
+        if (match) setPlayOutcome(match);
+      });
+    });
+  }
+
+  if (btnToggleOutcomeDropdown) {
+    btnToggleOutcomeDropdown.addEventListener('click', () => {
+      if (!searchableOutcomeBox) return;
+      const isOpen = searchableOutcomeBox.classList.contains('open');
+      if (isOpen) {
+        searchableOutcomeBox.classList.remove('open');
+      } else {
+        searchableOutcomeBox.classList.add('open');
+        renderOutcomeList(outcomeSearchInput ? outcomeSearchInput.value : '');
+        if (outcomeSearchInput) outcomeSearchInput.focus();
       }
     });
   }
 
-  // Outcome buttons
-  outcomeButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      outcomeButtons.forEach((b) => b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedOutcome = btn.getAttribute('data-outcome');
-      selectedIsHit = btn.getAttribute('data-ishit') === 'true';
+  if (outcomeSearchInput) {
+    outcomeSearchInput.addEventListener('input', (e) => {
+      renderOutcomeList(e.target.value);
+    });
+  }
+
+  if (clearSearchBtn) {
+    clearSearchBtn.addEventListener('click', () => {
+      if (outcomeSearchInput) {
+        outcomeSearchInput.value = '';
+        renderOutcomeList('');
+        outcomeSearchInput.focus();
+      }
+    });
+  }
+
+  // Quick Outcome Shortcut Chips (Single, Double, Triple, HR, Flyout, Groundout, Strikeout, Walk, Error)
+  quickOutcomeChips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const outcomeName = chip.getAttribute('data-outcome');
+      const match = baseballOutcomes.find(o => o.name === outcomeName);
+      if (match) setPlayOutcome(match);
     });
   });
 
@@ -1278,6 +1897,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (hitLogEntries.length === 0) {
       hitLogList.innerHTML = `<div class="empty-log-notice">No hits or plays recorded yet. Tap above to log plays!</div>`;
+      renderHistoricSprayDots();
       return;
     }
 
@@ -1292,7 +1912,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="item-left">
             <span class="item-badge ${badgeClass}">${entry.outcome.split(' ')[0]}</span>
             <span class="item-player">${entry.player} (${entry.teamName})</span>
-            <span class="item-zone">→ ${entry.zone.split(' ')[0]}</span>
+            <span class="item-zone">→ ${entry.zone.split(' ')[0]} • ${entry.distance || 0}ft</span>
           </div>
           <button type="button" class="delete-hit-btn" data-delete-id="${entry.id}" title="Remove play">
             <i class="fa-solid fa-trash-can"></i>
@@ -1300,6 +1920,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     }).join('');
+
+    renderHistoricSprayDots();
 
     hitLogList.querySelectorAll('.delete-hit-btn').forEach((btn) => {
       btn.addEventListener('click', (e) => {
@@ -1320,9 +1942,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Record Play to Hit Log Commit Button
   if (btnLogHitCommit) {
     btnLogHitCommit.addEventListener('click', () => {
-      const playerName = (hitPlayerInput && hitPlayerInput.value.trim()) || selectedPlayer;
+      const playerName = selectedPlayerName || 'Lead-off Batter';
       const team = hitTeam;
       const teamName = team === 'home' ? homeTeamName : awayTeamName;
 
@@ -1332,6 +1955,9 @@ document.addEventListener('DOMContentLoaded', () => {
         team: team,
         teamName: teamName,
         zone: selectedZone,
+        distance: selectedDistance,
+        x: currentSprayCoords.x,
+        y: currentSprayCoords.y,
         outcome: selectedOutcome,
         isHit: selectedIsHit,
         inning: `${isTopInning ? 'Top' : 'Bottom'} ${currentInning}`,
@@ -1342,13 +1968,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (entry.isHit) {
         teamHits[team]++;
-        showInningToast('HIT!', `${entry.outcome} by ${playerName}`);
+        showInningToast('HIT RECORDED!', `${entry.outcome} by ${playerName.split(' ')[0]}`);
       } else if (entry.outcome.includes('Error')) {
         const fieldingTeam = team === 'home' ? 'away' : 'home';
         teamErrors[fieldingTeam]++;
         showInningToast('ERROR', `Charged to ${fieldingTeam === 'home' ? homeTeamName : awayTeamName}`);
       } else {
-        showInningToast('RECORDED', `${entry.outcome} by ${playerName}`);
+        showInningToast('PLAY RECORDED', `${entry.outcome} by ${playerName.split(' ')[0]}`);
       }
 
       renderHitLogList();
@@ -1368,6 +1994,12 @@ document.addEventListener('DOMContentLoaded', () => {
       showInningToast('LOG CLEARED', 'All plays reset');
     });
   }
+
+  // Initialize Roster UI & Field Point
+  renderRosterUI();
+  selectFieldSprayPoint(170, 115, 'Center Field (CF)');
+  renderOutcomeList('');
+
 
   // --- 4. Finish Game & Pictureized Summary ---
   const pictureSummaryCard = document.getElementById('picture-summary-card');
