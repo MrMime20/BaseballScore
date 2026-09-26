@@ -46,6 +46,72 @@
       </div>
     </main>
 
+    <!-- Main Screen Pitch Counter Widget (Appears when enabled) -->
+    <section class="main-pitch-widget" id="main-pitch-widget" aria-label="Scoreboard Pitch Counter" style="display: none;">
+      <div class="main-pitch-header">
+        <button type="button" class="main-pitcher-btn" id="main-pitcher-toggle-btn" title="Tap to switch active Pitcher (Home/Away)">
+          <span class="pitcher-team-pill" id="main-pitch-team-badge">HOME P</span>
+          <span class="main-pitcher-name" id="main-pitcher-name">Nathan Eovaldi</span>
+          <i class="fa-solid fa-arrows-rotate pitcher-swap-icon"></i>
+        </button>
+        <div class="main-pitch-header-right">
+          <span class="pitch-mode-badge" id="main-pitch-mode-pill">SIMPLE</span>
+          <button type="button" class="main-pitch-expand-btn" id="main-pitch-expand-btn" title="Open Pitch Tools & Roster" aria-label="Open Pitch Tools & Roster">
+            <i class="fa-solid fa-sliders"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Simple Mode View: Clean & Big Pitch Counter with +1 and Undo -->
+      <div class="main-pitch-body" id="main-pitch-simple-view">
+        <div class="main-pitch-count-box">
+          <span class="main-pitch-big-num" id="main-pitch-num-simple">0</span>
+          <span class="main-pitch-label">PITCHES</span>
+        </div>
+        <div class="main-pitch-simple-controls">
+          <button type="button" class="main-pitch-add-btn" id="main-simple-add-btn" aria-label="Add 1 Pitch">
+            <i class="fa-solid fa-plus"></i>
+            <span>+1 PITCH</span>
+          </button>
+          <button type="button" class="main-pitch-undo-btn" id="main-simple-undo-btn" title="Undo Pitch" aria-label="Undo Pitch">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Advanced Mode View: Strike, Ball, Foul, In Play & Stats -->
+      <div class="main-pitch-body" id="main-pitch-adv-view" style="display: none;">
+        <div class="main-pitch-adv-top">
+          <div class="main-pitch-count-box mini">
+            <span class="main-pitch-big-num" id="main-pitch-num-adv">0</span>
+            <span class="main-pitch-label">PITCHES</span>
+          </div>
+          <div class="main-pitch-adv-breakdown">
+            <div class="adv-stat-pill strike"><span class="k-lbl">S:</span> <strong id="main-adv-strikes">0</strong></div>
+            <div class="adv-stat-pill ball"><span class="b-lbl">B:</span> <strong id="main-adv-balls">0</strong></div>
+            <div class="adv-stat-pill pct"><strong id="main-adv-pct">0%</strong></div>
+          </div>
+        </div>
+        <div class="main-pitch-adv-actions">
+          <button type="button" class="adv-quick-btn strike" id="main-adv-btn-strike" title="Strike (+1)">
+            <span>Strike</span>
+          </button>
+          <button type="button" class="adv-quick-btn ball" id="main-adv-btn-ball" title="Ball (+1)">
+            <span>Ball</span>
+          </button>
+          <button type="button" class="adv-quick-btn foul" id="main-adv-btn-foul" title="Foul (+1)">
+            <span>Foul</span>
+          </button>
+          <button type="button" class="adv-quick-btn inplay" id="main-adv-btn-inplay" title="In Play (+1)">
+            <span>In Play</span>
+          </button>
+          <button type="button" class="adv-quick-btn undo" id="main-adv-btn-undo" title="Undo Pitch">
+            <i class="fa-solid fa-rotate-left"></i>
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- Inning Transition / Side Retired Visual Indicator -->
     <div class="inning-transition-toast" id="inning-toast" role="status" aria-live="polite">
       <span class="toast-badge" id="toast-badge">3 OUTS</span>
@@ -115,150 +181,369 @@
         <div class="drawer-body">
           <!-- 1. Pitch Counter Panel -->
           <div class="advanced-panel active" id="panel-pitches">
-            <!-- Pitcher Team Toggle -->
-            <div class="pitcher-team-toggle">
-              <button type="button" class="pitch-team-btn active" id="pitch-team-home">Home Pitcher</button>
-              <button type="button" class="pitch-team-btn" id="pitch-team-away">Away Pitcher</button>
-            </div>
-
-            <!-- Pitch Counter Big Display -->
-            <div class="pitch-display-card">
-              <div class="pitch-main-count">
-                <span class="pitch-number" id="pitch-total-num">0</span>
-                <span class="pitch-label">TOTAL PITCHES</span>
+            <!-- Pitch Counter Toolbar: Scoreboard Display & Mode -->
+            <div class="pitch-toolbar-card">
+              <div class="pitch-toolbar-row">
+                <div class="toolbar-label-group">
+                  <i class="fa-solid fa-desktop"></i>
+                  <span>Show on Scoreboard</span>
+                </div>
+                <label class="switch-toggle" title="Show Pitch Counter widget on the main scoreboard">
+                  <input type="checkbox" id="toggle-pitch-scoreboard">
+                  <span class="slider"></span>
+                </label>
               </div>
-              <div class="pitch-stats-row">
-                <div class="pitch-stat">
-                  <span class="stat-num" id="pitch-strikes-num">0</span>
-                  <span class="stat-lbl">Strikes</span>
+              <div class="pitch-toolbar-row">
+                <div class="toolbar-label-group">
+                  <i class="fa-solid fa-sliders"></i>
+                  <span>Counter Mode</span>
                 </div>
-                <div class="pitch-stat">
-                  <span class="stat-num" id="pitch-balls-num">0</span>
-                  <span class="stat-lbl">Balls</span>
-                </div>
-                <div class="pitch-stat">
-                  <span class="stat-num" id="pitch-pct-num">0%</span>
-                  <span class="stat-lbl">Strike %</span>
+                <div class="pitch-mode-segment" id="pitch-mode-segment">
+                  <button type="button" class="mode-segment-btn active" id="pitch-mode-simple-btn">Simple</button>
+                  <button type="button" class="mode-segment-btn" id="pitch-mode-adv-btn">Advanced</button>
                 </div>
               </div>
             </div>
 
-            <!-- Pitch Control Buttons Grid -->
-            <div class="pitch-actions-grid">
-              <button type="button" class="pitch-action-btn strike" id="btn-pitch-strike">
-                <i class="fa-solid fa-circle-check"></i>
-                <span>Strike (+1)</span>
-              </button>
-              <button type="button" class="pitch-action-btn ball" id="btn-pitch-ball">
-                <i class="fa-solid fa-circle-xmark"></i>
-                <span>Ball (+1)</span>
-              </button>
-              <button type="button" class="pitch-action-btn foul" id="btn-pitch-foul">
-                <i class="fa-solid fa-shield-halved"></i>
-                <span>Foul (+1)</span>
-              </button>
-              <button type="button" class="pitch-action-btn inplay" id="btn-pitch-inplay">
-                <i class="fa-solid fa-baseball-bat-ball"></i>
-                <span>In Play (+1)</span>
-              </button>
+            <!-- Pitcher Selection & Name Configuration -->
+            <div class="pitcher-config-card">
+              <div class="pitcher-team-toggle">
+                <button type="button" class="pitch-team-btn active" id="pitch-team-home">Home Pitcher</button>
+                <button type="button" class="pitch-team-btn" id="pitch-team-away">Away Pitcher</button>
+              </div>
+              <div class="pitcher-name-row">
+                <div class="pitcher-input-wrap">
+                  <label for="pitcher-name-input" class="micro-label">Current Pitcher Name / #</label>
+                  <div class="pitcher-input-inner">
+                    <input type="text" id="pitcher-name-input" placeholder="e.g. Nathan Eovaldi #17" maxlength="24" />
+                    <button type="button" class="pitcher-roster-btn" id="pitcher-roster-btn" title="Pick from saved roster">
+                      <i class="fa-solid fa-list-ul"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div class="pitch-secondary-actions">
-              <button type="button" class="action-btn" id="btn-pitch-undo">
-                <i class="fa-solid fa-rotate-left"></i> <span>Undo Pitch</span>
+            <!-- VIEW A: Simple Pitch Counter (Total Count Only) -->
+            <div class="pitch-mode-view" id="pitch-simple-mode-view">
+              <div class="simple-pitch-card">
+                <span class="simple-pitch-big-num" id="simple-pitch-total-num">0</span>
+                <span class="simple-pitch-label">TOTAL PITCHES</span>
+              </div>
+              <button type="button" class="simple-pitch-giant-add" id="btn-simple-pitch-add">
+                <i class="fa-solid fa-plus"></i>
+                <span>+1 PITCH</span>
               </button>
-              <button type="button" class="action-btn danger" id="btn-pitch-reset">
-                <i class="fa-solid fa-arrows-rotate"></i> <span>Reset Counter</span>
-              </button>
+              <div class="pitch-secondary-actions">
+                <button type="button" class="action-btn" id="btn-simple-pitch-undo">
+                  <i class="fa-solid fa-rotate-left"></i> <span>Undo (-1)</span>
+                </button>
+                <button type="button" class="action-btn danger" id="btn-simple-pitch-reset">
+                  <i class="fa-solid fa-arrows-rotate"></i> <span>Reset Counter</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- VIEW B: Advanced Pitch Counter (Strikes, Balls, Fouls, In-Play) -->
+            <div class="pitch-mode-view" id="pitch-adv-mode-view" style="display: none;">
+              <!-- Pitch Counter Big Display -->
+              <div class="pitch-display-card">
+                <div class="pitch-main-count">
+                  <span class="pitch-number" id="pitch-total-num">0</span>
+                  <span class="pitch-label">TOTAL PITCHES</span>
+                </div>
+                <div class="pitch-stats-row">
+                  <div class="pitch-stat">
+                    <span class="stat-num" id="pitch-strikes-num">0</span>
+                    <span class="stat-lbl">Strikes</span>
+                  </div>
+                  <div class="pitch-stat">
+                    <span class="stat-num" id="pitch-balls-num">0</span>
+                    <span class="stat-lbl">Balls</span>
+                  </div>
+                  <div class="pitch-stat">
+                    <span class="stat-num" id="pitch-pct-num">0%</span>
+                    <span class="stat-lbl">Strike %</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Pitch Control Buttons Grid -->
+              <div class="pitch-actions-grid">
+                <button type="button" class="pitch-action-btn strike" id="btn-pitch-strike">
+                  <i class="fa-solid fa-circle-check"></i>
+                  <span>Strike (+1)</span>
+                </button>
+                <button type="button" class="pitch-action-btn ball" id="btn-pitch-ball">
+                  <i class="fa-solid fa-circle-xmark"></i>
+                  <span>Ball (+1)</span>
+                </button>
+                <button type="button" class="pitch-action-btn foul" id="btn-pitch-foul">
+                  <i class="fa-solid fa-shield-halved"></i>
+                  <span>Foul (+1)</span>
+                </button>
+                <button type="button" class="pitch-action-btn inplay" id="btn-pitch-inplay">
+                  <i class="fa-solid fa-baseball-bat-ball"></i>
+                  <span>In Play (+1)</span>
+                </button>
+              </div>
+
+              <div class="pitch-secondary-actions">
+                <button type="button" class="action-btn" id="btn-pitch-undo">
+                  <i class="fa-solid fa-rotate-left"></i> <span>Undo Pitch</span>
+                </button>
+                <button type="button" class="action-btn danger" id="btn-pitch-reset">
+                  <i class="fa-solid fa-arrows-rotate"></i> <span>Reset Counter</span>
+                </button>
+              </div>
             </div>
           </div>
 
           <!-- 2. Hit Log Panel -->
           <div class="advanced-panel" id="panel-hitlog">
-            <!-- Step 1: Pick Player -->
+            <!-- Step 1: Configurable & Rememberable Batter -->
             <div class="log-section">
               <div class="section-title-row">
                 <span class="step-num">1</span>
                 <span class="section-heading">Select Batter</span>
+                <button type="button" class="add-player-toggle-btn" id="btn-toggle-add-player" title="Add new player to roster">
+                  <i class="fa-solid fa-user-plus"></i> <span>Add Player</span>
+                </button>
               </div>
+
               <div class="batter-selector-row">
                 <div class="team-mini-toggle">
                   <button type="button" class="mini-btn active" id="hit-team-away">Away (Batting)</button>
                   <button type="button" class="mini-btn" id="hit-team-home">Home</button>
                 </div>
-                <div class="player-input-wrap">
-                  <input type="text" id="hit-player-input" placeholder="Player Name or #" value="#1 Lead-off" maxlength="18" />
+                <div class="player-select-wrap">
+                  <select id="hit-player-dropdown" class="player-select-dropdown" aria-label="Select saved batter">
+                    <!-- Populated dynamically from saved roster -->
+                  </select>
+                </div>
+                <button type="button" class="remove-player-btn" id="btn-remove-player" title="Delete selected player from roster">
+                  <i class="fa-solid fa-user-minus"></i>
+                </button>
+              </div>
+
+              <!-- Inline Add New Player Form (Expandable) -->
+              <div class="add-player-box" id="add-player-box" style="display: none;">
+                <div class="add-player-inputs">
+                  <input type="text" id="new-player-name" placeholder="Player Name (e.g. Mike Trout)" maxlength="20" />
+                  <input type="text" id="new-player-num" placeholder="#27" maxlength="4" class="num-input" />
+                  <select id="new-player-pos" class="pos-select">
+                    <option value="CF">CF</option>
+                    <option value="LF">LF</option>
+                    <option value="RF">RF</option>
+                    <option value="SS">SS</option>
+                    <option value="2B">2B</option>
+                    <option value="3B">3B</option>
+                    <option value="1B">1B</option>
+                    <option value="C">C</option>
+                    <option value="DH">DH</option>
+                    <option value="P">P</option>
+                  </select>
+                </div>
+                <div class="add-player-btns">
+                  <button type="button" class="save-player-btn" id="btn-save-player">
+                    <i class="fa-solid fa-check"></i> <span>Save to Roster</span>
+                  </button>
+                  <button type="button" class="cancel-player-btn" id="btn-cancel-add-player">Cancel</button>
                 </div>
               </div>
+
+              <!-- Quick Batter Chips (Populated dynamically from saved roster) -->
               <div class="quick-player-chips" id="quick-player-chips">
-                <button type="button" class="chip-btn active" data-player="#1 Lead-off">#1</button>
-                <button type="button" class="chip-btn" data-player="#2 Batter">#2</button>
-                <button type="button" class="chip-btn" data-player="#3 Clean-up">#3</button>
-                <button type="button" class="chip-btn" data-player="#4 Power">#4</button>
-                <button type="button" class="chip-btn" data-player="#5 Batter">#5</button>
-                <button type="button" class="chip-btn" data-player="#6 Batter">#6</button>
-                <button type="button" class="chip-btn" data-player="#7 Batter">#7</button>
-                <button type="button" class="chip-btn" data-player="#8 Batter">#8</button>
-                <button type="button" class="chip-btn" data-player="#9 Batter">#9</button>
+                <!-- Dynamic roster chips rendered by JS -->
               </div>
             </div>
 
-            <!-- Step 2: Interactive Field Spray Chart -->
+            <!-- Step 2: Authentic Baseball Field Spray Chart -->
             <div class="log-section">
               <div class="section-title-row">
                 <span class="step-num">2</span>
-                <span class="section-heading">Tap Where Hit</span>
-                <span class="selected-zone-tag" id="selected-zone-tag">Center Field (CF)</span>
+                <span class="section-heading">Tap Where Hit (Spray Chart)</span>
+                <span class="selected-zone-tag" id="selected-zone-tag">Center Field (CF) • 385 ft</span>
               </div>
               <div class="field-diagram-container" id="field-diagram-container">
-                <svg viewBox="0 0 280 230" class="baseball-field-svg" id="baseball-field-svg">
-                  <!-- Outfield Grass Arc -->
-                  <path d="M 20 180 A 180 180 0 0 1 260 180 L 140 215 Z" class="field-grass" />
-                  <!-- Infield Dirt Circle -->
-                  <circle cx="140" cy="165" r="54" class="field-dirt" />
-                  <!-- Infield Grass Diamond -->
-                  <polygon points="140,135 175,165 140,195 105,165" class="field-grass-inner" />
-                  <!-- Foul Lines -->
-                  <line x1="140" y1="215" x2="20" y2="180" class="field-line" />
-                  <line x1="140" y1="215" x2="260" y2="180" class="field-line" />
-                  <!-- Pitcher's Mound -->
-                  <circle cx="140" cy="165" r="6" class="field-mound" />
-                  <!-- Home Plate -->
-                  <polygon points="140,212 136,215 144,215" class="field-plate" />
-                  <!-- Interactive Field Zones -->
-                  <g class="field-zones">
-                    <polygon points="20,180 50,110 110,120 105,165 140,215" class="zone-poly" data-zone="Left Field (LF)" id="zone-lf" />
-                    <polygon points="50,110 140,75 230,110 175,140 140,135 105,140" class="zone-poly active" data-zone="Center Field (CF)" id="zone-cf" />
-                    <polygon points="260,180 230,110 170,120 175,165 140,215" class="zone-poly" data-zone="Right Field (RF)" id="zone-rf" />
-                    <circle cx="120" cy="150" r="16" class="zone-circle" data-zone="Shortstop (SS)" id="zone-ss" />
-                    <circle cx="160" cy="150" r="16" class="zone-circle" data-zone="2nd Base (2B)" id="zone-2b" />
-                    <circle cx="108" cy="175" r="15" class="zone-circle" data-zone="3rd Base (3B)" id="zone-3b" />
-                    <circle cx="172" cy="175" r="15" class="zone-circle" data-zone="1st Base (1B)" id="zone-1b" />
-                    <circle cx="140" cy="165" r="12" class="zone-circle" data-zone="Pitcher (P)" id="zone-p" />
+                <!-- Authentic High-Fidelity Baseball Spray Chart SVG -->
+                <svg viewBox="0 0 340 320" class="baseball-field-svg authentic-field-svg" id="baseball-field-svg">
+                  <defs>
+                    <!-- Ballpark Outfield Mowing Pattern -->
+                    <pattern id="ballpark-lawn-stripes" width="24" height="24" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                      <rect width="12" height="24" fill="#1b6e35" />
+                      <rect x="12" width="12" height="24" fill="#228340" />
+                    </pattern>
+                    <!-- Warning Track Dirt Texture -->
+                    <radialGradient id="dirt-mound-grad" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#b46428" />
+                      <stop offset="100%" stop-color="#8c4714" />
+                    </radialGradient>
+                    <radialGradient id="infield-dirt-grad" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stop-color="#be6d31" />
+                      <stop offset="90%" stop-color="#9a4e1a" />
+                      <stop offset="100%" stop-color="#803f12" />
+                    </radialGradient>
+                  </defs>
+
+                  <!-- 1. Outfield Outer Ground / Foul Territory -->
+                  <path d="M 170,285 L 20,135 A 215,215 0 0,1 320,135 Z" fill="#135227" />
+
+                  <!-- 2. Warning Track Dirt Arc (runs along the outfield fence) -->
+                  <path d="M 24,139 A 210,210 0 0,1 316,139 L 302,152 A 192,192 0 0,0 38,152 Z" fill="#9e5622" opacity="0.9" />
+
+                  <!-- 3. Outfield Grass with Ballpark Stripes Pattern -->
+                  <path d="M 170,285 L 38,152 A 192,192 0 0,1 302,152 Z" fill="url(#ballpark-lawn-stripes)" />
+
+                  <!-- 4. Outfield Wall / Padded Fence Arc -->
+                  <path d="M 22,137 A 212,212 0 0,1 318,137" fill="none" stroke="#062b14" stroke-width="5" stroke-linecap="round" />
+                  <path d="M 22,137 A 212,212 0 0,1 318,137" fill="none" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="10 8" />
+
+                  <!-- Outfield Distance Markers -->
+                  <text x="36" y="132" fill="#e2e8f0" font-size="9" font-weight="900" text-anchor="middle">330</text>
+                  <text x="170" y="70" fill="#e2e8f0" font-size="10" font-weight="900" text-anchor="middle">400</text>
+                  <text x="304" y="132" fill="#e2e8f0" font-size="9" font-weight="900" text-anchor="middle">330</text>
+
+                  <!-- Yellow Foul Poles -->
+                  <line x1="22" y1="144" x2="22" y2="120" stroke="#facc15" stroke-width="3" stroke-linecap="round" />
+                  <polygon points="22,122 17,126 22,130" fill="#facc15" />
+                  <line x1="318" y1="144" x2="318" y2="120" stroke="#facc15" stroke-width="3" stroke-linecap="round" />
+                  <polygon points="318,122 323,126 318,130" fill="#facc15" />
+
+                  <!-- 5. Infield Dirt Area (Circle/Diamond Cutout) -->
+                  <path d="M 170,172 A 66,66 0 0,1 236,238 L 222,252 L 170,285 L 118,252 L 104,238 A 66,66 0 0,1 170,172 Z" fill="url(#infield-dirt-grad)" />
+
+                  <!-- 6. Infield Grass Diamond (Center of bases) -->
+                  <polygon points="170,202 208,240 170,278 132,240" fill="#1e7b3c" stroke="#9a4e1a" stroke-width="2" />
+
+                  <!-- 7. White Base Paths & Foul Lines (Chalk) -->
+                  <!-- Left & Right Foul Lines to Poles -->
+                  <line x1="170" y1="285" x2="22" y2="137" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" />
+                  <line x1="170" y1="285" x2="318" y2="137" stroke="#ffffff" stroke-width="2.5" stroke-linecap="square" />
+
+                  <!-- Base paths between bases -->
+                  <line x1="170" y1="285" x2="216" y2="239" stroke="#ffffff" stroke-width="1.8" />
+                  <line x1="216" y1="239" x2="170" y2="193" stroke="#ffffff" stroke-width="1.8" />
+                  <line x1="170" y1="193" x2="124" y2="239" stroke="#ffffff" stroke-width="1.8" />
+                  <line x1="124" y1="239" x2="170" y2="285" stroke="#ffffff" stroke-width="1.8" />
+
+                  <!-- Coach's Boxes -->
+                  <rect x="94" y="246" width="14" height="26" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.6" />
+                  <rect x="232" y="246" width="14" height="26" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.6" />
+
+                  <!-- 8. Pitcher's Mound & Rubber -->
+                  <circle cx="170" cy="236" r="11" fill="url(#dirt-mound-grad)" stroke="#ffffff" stroke-width="1" />
+                  <rect x="166" y="235" width="8" height="2.5" fill="#ffffff" rx="0.5" />
+
+                  <!-- 9. Base Bags (Crisp White Canvas Bags) -->
+                  <!-- 1st Base (Right) -->
+                  <polygon points="216,233 222,239 216,245 210,239" fill="#ffffff" stroke="#000000" stroke-width="0.8" />
+                  <!-- 2nd Base (Top) -->
+                  <polygon points="170,187 176,193 170,199 164,193" fill="#ffffff" stroke="#000000" stroke-width="0.8" />
+                  <!-- 3rd Base (Left) -->
+                  <polygon points="124,233 130,239 124,245 118,239" fill="#ffffff" stroke="#000000" stroke-width="0.8" />
+
+                  <!-- Batter's Boxes (Left & Right) -->
+                  <rect x="151" y="278" width="11" height="18" fill="none" stroke="#ffffff" stroke-width="1.2" />
+                  <rect x="178" y="278" width="11" height="18" fill="none" stroke="#ffffff" stroke-width="1.2" />
+
+                  <!-- Home Plate Pentagon -->
+                  <polygon points="170,288 165,283 165,278 175,278 175,283" fill="#ffffff" stroke="#000000" stroke-width="0.8" />
+                  <!-- Catcher's Box -->
+                  <rect x="161" y="291" width="18" height="14" fill="none" stroke="#ffffff" stroke-width="1" opacity="0.7" />
+
+                  <!-- 10. Clickable Hit Zones (Clean authentic boundaries) -->
+                  <g class="field-zones" id="field-zones-group">
+                    <!-- Deep Outfield Zones -->
+                    <path d="M 24,139 A 210,210 0 0,1 115,86 L 126,145 L 38,152 Z" class="zone-poly" data-zone="Deep Left (LF)" id="zone-deep-lf" />
+                    <path d="M 115,86 A 210,210 0 0,1 225,86 L 214,145 L 126,145 Z" class="zone-poly active" data-zone="Center Field (CF)" id="zone-cf" />
+                    <path d="M 225,86 A 210,210 0 0,1 316,139 L 302,152 L 214,145 Z" class="zone-poly" data-zone="Deep Right (RF)" id="zone-deep-rf" />
+
+                    <!-- Medium Outfield / Gaps -->
+                    <polygon points="38,152 126,145 138,190 85,200" class="zone-poly" data-zone="Left Field (LF)" id="zone-lf" />
+                    <polygon points="126,145 214,145 195,188 145,188" class="zone-poly" data-zone="Center Field (CF)" id="zone-mid-cf" />
+                    <polygon points="214,145 302,152 255,200 202,190" class="zone-poly" data-zone="Right Field (RF)" id="zone-rf" />
+
+                    <!-- Infield Zones -->
+                    <polygon points="85,200 138,190 148,228 108,238" class="zone-poly" data-zone="Shortstop (SS)" id="zone-ss" />
+                    <polygon points="138,190 195,188 185,225 148,225" class="zone-poly" data-zone="2nd Base (2B)" id="zone-2b" />
+                    <polygon points="195,188 255,200 232,238 192,228" class="zone-poly" data-zone="1st Base (1B)" id="zone-1b" />
+                    <polygon points="108,238 148,228 152,260 120,268" class="zone-poly" data-zone="3rd Base (3B)" id="zone-3b" />
+                    <circle cx="170" cy="236" r="14" class="zone-circle" data-zone="Pitcher (P)" id="zone-p" />
+                    <polygon points="152,260 188,260 170,285" class="zone-poly" data-zone="Catcher / Infield" id="zone-c" />
                   </g>
-                  <!-- Spray Marker Point -->
-                  <circle cx="140" cy="95" r="5" class="spray-marker" id="spray-marker" />
+
+                  <!-- 11. Multi-Hit Historical Spray Chart Dots (Rendered dynamically) -->
+                  <g class="historic-spray-dots" id="historic-spray-dots">
+                    <!-- Dots from past plays rendered here -->
+                  </g>
+
+                  <!-- Trajectory Line for Current Selection -->
+                  <line x1="170" y1="285" x2="170" y2="115" class="spray-trajectory" id="spray-trajectory" stroke="#ffffff" stroke-width="2" stroke-dasharray="4 3" opacity="0.8" />
+
+                  <!-- Active Hit Spray Target Marker -->
+                  <g class="active-spray-marker" id="active-spray-marker-group" transform="translate(170, 115)">
+                    <circle cx="0" cy="0" r="12" class="marker-pulse-ring" />
+                    <circle cx="0" cy="0" r="5" class="marker-center-dot" />
+                  </g>
                 </svg>
+              </div>
+
+              <!-- Spray Chart Legend / Multi-Hit Summary -->
+              <div class="spray-legend-row">
+                <span class="legend-chip hit-1b"><i class="fa-solid fa-circle"></i> 1B Single</span>
+                <span class="legend-chip hit-2b"><i class="fa-solid fa-circle"></i> 2B Double</span>
+                <span class="legend-chip hit-3b"><i class="fa-solid fa-circle"></i> 3B Triple</span>
+                <span class="legend-chip hit-hr"><i class="fa-solid fa-star"></i> HR</span>
+                <span class="legend-chip play-out"><i class="fa-solid fa-circle"></i> Out</span>
+                <span class="legend-chip play-misc"><i class="fa-solid fa-circle"></i> Error/BB</span>
               </div>
             </div>
 
-            <!-- Step 3: Pick Outcome -->
+            <!-- Step 3: Searchable Play Outcome with Every Outcome -->
             <div class="log-section">
               <div class="section-title-row">
                 <span class="step-num">3</span>
-                <span class="section-heading">Play Outcome</span>
+                <span class="section-heading">Play Outcome (Searchable)</span>
               </div>
-              <div class="outcomes-grid" id="outcomes-grid">
-                <button type="button" class="outcome-btn hit active" data-outcome="1B Single" data-ishit="true">1B Single</button>
-                <button type="button" class="outcome-btn hit" data-outcome="2B Double" data-ishit="true">2B Double</button>
-                <button type="button" class="outcome-btn hit" data-outcome="3B Triple" data-ishit="true">3B Triple</button>
-                <button type="button" class="outcome-btn hit hr" data-outcome="Home Run (HR)" data-ishit="true">Home Run</button>
-                <button type="button" class="outcome-btn out" data-outcome="Flyout" data-ishit="false">Flyout</button>
-                <button type="button" class="outcome-btn out" data-outcome="Groundout" data-ishit="false">Groundout</button>
-                <button type="button" class="outcome-btn out" data-outcome="Lineout" data-ishit="false">Lineout</button>
-                <button type="button" class="outcome-btn misc" data-outcome="Error (E)" data-ishit="false">Error</button>
-                <button type="button" class="outcome-btn misc" data-outcome="Walk (BB)" data-ishit="false">Walk</button>
-                <button type="button" class="outcome-btn out" data-outcome="Strikeout (K)" data-ishit="false">Strikeout</button>
+
+              <!-- Active Selected Outcome Card -->
+              <div class="selected-outcome-display" id="selected-outcome-display">
+                <div class="outcome-badge-wrap">
+                  <span class="outcome-badge-pill hit" id="current-outcome-pill">1B Single</span>
+                  <span class="outcome-desc-text" id="current-outcome-desc">Clean single through the infield or outfield</span>
+                </div>
+                <button type="button" class="change-outcome-btn" id="btn-toggle-outcome-dropdown">
+                  <i class="fa-solid fa-magnifying-glass"></i> <span>Search All</span>
+                </button>
+              </div>
+
+              <!-- Searchable Dropdown Box (Collapsible / Searchable) -->
+              <div class="searchable-outcome-box" id="searchable-outcome-box">
+                <div class="outcome-search-input-wrap">
+                  <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                  <input type="text" id="outcome-search-input" placeholder="Search any play (e.g. 'Single', 'Double Play', 'Strikeout', 'Error')..." autocomplete="off" />
+                  <button type="button" class="clear-search-btn" id="clear-search-btn" title="Clear Search">
+                    <i class="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+
+                <div class="outcome-dropdown-list" id="outcome-dropdown-list">
+                  <!-- Generated dynamically with categorized outcomes -->
+                </div>
+              </div>
+
+              <!-- Quick Outcome Shortcut Chips (Top 8 Most Frequent Plays) -->
+              <div class="quick-outcome-chips" id="quick-outcome-chips">
+                <button type="button" class="quick-chip active" data-outcome="1B Single" data-ishit="true">1B Single</button>
+                <button type="button" class="quick-chip" data-outcome="2B Double" data-ishit="true">2B Double</button>
+                <button type="button" class="quick-chip" data-outcome="3B Triple" data-ishit="true">3B Triple</button>
+                <button type="button" class="quick-chip hr" data-outcome="Home Run (HR)" data-ishit="true">Home Run</button>
+                <button type="button" class="quick-chip out" data-outcome="Flyout" data-ishit="false">Flyout</button>
+                <button type="button" class="quick-chip out" data-outcome="Groundout" data-ishit="false">Groundout</button>
+                <button type="button" class="quick-chip out" data-outcome="Strikeout (K)" data-ishit="false">Strikeout</button>
+                <button type="button" class="quick-chip misc" data-outcome="Walk (BB)" data-ishit="false">Walk</button>
+                <button type="button" class="quick-chip misc" data-outcome="Error (E)" data-ishit="false">Error</button>
               </div>
             </div>
 
@@ -271,7 +556,7 @@
             <div class="hit-log-history-card">
               <div class="history-card-header">
                 <span>Recent Plays (<span id="hit-log-count">0</span>)</span>
-                <button type="button" class="clear-log-btn" id="clear-log-btn" title="Clear Hit Log">Clear</button>
+                <button type="button" class="clear-log-btn" id="clear-log-btn" title="Clear Hit Log">Clear All</button>
               </div>
               <div class="hit-log-list" id="hit-log-list">
                 <div class="empty-log-notice">No hits or plays recorded yet. Tap above to log plays!</div>
@@ -524,6 +809,25 @@
               <div class="input-block">
                 <label for="away-name-input">Away</label>
                 <input type="text" id="away-name-input" value="Away" maxlength="10" autocomplete="off" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Pitch Counter Settings -->
+          <div class="settings-group">
+            <label class="group-label">Pitch Counter Settings</label>
+            <div class="settings-toggle-row">
+              <span class="setting-title">Show on Scoreboard</span>
+              <label class="switch-toggle" title="Enable pitch counter widget on main screen">
+                <input type="checkbox" id="settings-pitch-scoreboard-toggle">
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="settings-toggle-row">
+              <span class="setting-title">Counter Style</span>
+              <div class="settings-segment-toggle">
+                <button type="button" class="segment-btn active" id="settings-pitch-mode-simple">Simple</button>
+                <button type="button" class="segment-btn" id="settings-pitch-mode-adv">Advanced</button>
               </div>
             </div>
           </div>
