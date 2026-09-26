@@ -19,6 +19,34 @@ document.addEventListener('DOMContentLoaded', () => {
   let teamHits = { home: 0, away: 0 };
   let teamErrors = { home: 0, away: 0 };
   let isGameFinal = false;
+  let hitTeam = 'away';
+
+  // Pitch Counter State
+  let pitchCounterEnabled = localStorage.getItem('pitch_counter_enabled') === 'true';
+  let pitchCounterMode = localStorage.getItem('pitch_counter_mode') || 'simple'; // 'simple' or 'advanced'
+  let activePitcherTeam = 'home';
+  let pitcherNames = {
+    home: 'Nathan Eovaldi #17',
+    away: 'Yoshinobu Yamamoto #18'
+  };
+  try {
+    const savedPitchers = JSON.parse(localStorage.getItem('pitcher_names_v2'));
+    if (savedPitchers) {
+      if (savedPitchers.home) pitcherNames.home = savedPitchers.home;
+      if (savedPitchers.away) pitcherNames.away = savedPitchers.away;
+    }
+  } catch (_) {}
+
+  function savePitcherNames() {
+    try {
+      localStorage.setItem('pitcher_names_v2', JSON.stringify(pitcherNames));
+    } catch (_) {}
+  }
+
+  const pitchData = {
+    home: { total: 0, strikes: 0, balls: 0, fouls: 0, inplay: 0, history: [] },
+    away: { total: 0, strikes: 0, balls: 0, fouls: 0, inplay: 0, history: [] }
+  };
 
   // Timer State
   let secondsElapsed = 0;
@@ -75,6 +103,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareTwitterBtn = document.getElementById('share-twitter-btn');
   const shareEmailBtn = document.getElementById('share-email-btn');
   const shareCopyBtn = document.getElementById('share-copy-btn');
+
+  // DOM Elements - Finish Game & Pictureized Summary
+  const pictureSummaryCard = document.getElementById('picture-summary-card');
+  const cardStatusTag = document.getElementById('card-status-tag');
+  const cardHomeName = document.getElementById('card-home-name');
+  const cardHomeScore = document.getElementById('card-home-score');
+  const cardAwayName = document.getElementById('card-away-name');
+  const cardAwayScore = document.getElementById('card-away-score');
+  const cardLineHome = document.getElementById('card-line-home');
+  const cardLineHomeR = document.getElementById('card-line-home-r');
+  const cardLineHomeH = document.getElementById('card-line-home-h');
+  const cardLineHomeE = document.getElementById('card-line-home-e');
+  const cardLineAway = document.getElementById('card-line-away');
+  const cardLineAwayR = document.getElementById('card-line-away-r');
+  const cardLineAwayH = document.getElementById('card-line-away-h');
+  const cardLineAwayE = document.getElementById('card-line-away-e');
+  const cardDuration = document.getElementById('card-duration');
+  const cardInningFinal = document.getElementById('card-inning-final');
+  const cardTotalPitches = document.getElementById('card-total-pitches');
+  const cardDateStamp = document.getElementById('card-date-stamp');
+  const btnDownloadImage = document.getElementById('btn-download-image');
+  const btnCopyCardSummary = document.getElementById('btn-copy-card-summary');
+  const btnFinishGameToggle = document.getElementById('btn-finish-game-toggle');
+  const finishGameBtnText = document.getElementById('finish-game-btn-text');
 
   // Timeouts
   let sideChangeTimeout = null;
@@ -1048,34 +1100,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- 2. Pitch Counter Logic (Simple & Advanced, Scoreboard Integration) ---
-  let pitchCounterEnabled = localStorage.getItem('pitch_counter_enabled') === 'true';
-  let pitchCounterMode = localStorage.getItem('pitch_counter_mode') || 'simple'; // 'simple' or 'advanced'
-  let activePitcherTeam = 'home';
-
-  // Pitcher Names (persisted in localStorage)
-  let pitcherNames = {
-    home: 'Nathan Eovaldi #17',
-    away: 'Yoshinobu Yamamoto #18'
-  };
-  try {
-    const savedPitchers = JSON.parse(localStorage.getItem('pitcher_names_v2'));
-    if (savedPitchers) {
-      if (savedPitchers.home) pitcherNames.home = savedPitchers.home;
-      if (savedPitchers.away) pitcherNames.away = savedPitchers.away;
-    }
-  } catch (_) {}
-
-  function savePitcherNames() {
-    try {
-      localStorage.setItem('pitcher_names_v2', JSON.stringify(pitcherNames));
-    } catch (_) {}
-  }
-
-  const pitchData = {
-    home: { total: 0, strikes: 0, balls: 0, fouls: 0, inplay: 0, history: [] },
-    away: { total: 0, strikes: 0, balls: 0, fouls: 0, inplay: 0, history: [] }
-  };
-
   // Main Screen Widget DOM Elements
   const mainPitchWidget = document.getElementById('main-pitch-widget');
   const mainPitcherToggleBtn = document.getElementById('main-pitcher-toggle-btn');
@@ -1383,12 +1407,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (mainAdvBtnInplay) mainAdvBtnInplay.addEventListener('click', () => recordPitch('inplay'));
   if (mainAdvBtnUndo) mainAdvBtnUndo.addEventListener('click', undoPitch);
 
-  // Initialize pitch counter settings & display
-  setPitchCounterEnabled(pitchCounterEnabled);
-  setPitchCounterMode(pitchCounterMode);
-
   // --- 3. Hit Log Logic (Configurable Roster, Authentic Spray Chart & Searchable Outcomes) ---
-  let hitTeam = 'away';
+  hitTeam = 'away';
   let selectedPlayerName = 'Mookie Betts #50';
   let selectedZone = 'Center Field (CF)';
   let selectedDistance = 385;
@@ -1995,36 +2015,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Initialize Roster UI & Field Point
-  renderRosterUI();
-  selectFieldSprayPoint(170, 115, 'Center Field (CF)');
-  renderOutcomeList('');
-
-
   // --- 4. Finish Game & Pictureized Summary ---
-  const pictureSummaryCard = document.getElementById('picture-summary-card');
-  const cardStatusTag = document.getElementById('card-status-tag');
-  const cardHomeName = document.getElementById('card-home-name');
-  const cardHomeScore = document.getElementById('card-home-score');
-  const cardAwayName = document.getElementById('card-away-name');
-  const cardAwayScore = document.getElementById('card-away-score');
-  const cardLineHome = document.getElementById('card-line-home');
-  const cardLineHomeR = document.getElementById('card-line-home-r');
-  const cardLineHomeH = document.getElementById('card-line-home-h');
-  const cardLineHomeE = document.getElementById('card-line-home-e');
-  const cardLineAway = document.getElementById('card-line-away');
-  const cardLineAwayR = document.getElementById('card-line-away-r');
-  const cardLineAwayH = document.getElementById('card-line-away-h');
-  const cardLineAwayE = document.getElementById('card-line-away-e');
-  const cardDuration = document.getElementById('card-duration');
-  const cardInningFinal = document.getElementById('card-inning-final');
-  const cardTotalPitches = document.getElementById('card-total-pitches');
-  const cardDateStamp = document.getElementById('card-date-stamp');
-  const btnDownloadImage = document.getElementById('btn-download-image');
-  const btnCopyCardSummary = document.getElementById('btn-copy-card-summary');
-  const btnFinishGameToggle = document.getElementById('btn-finish-game-toggle');
-  const finishGameBtnText = document.getElementById('finish-game-btn-text');
-
   function updateRecapCard() {
     if (cardHomeName) cardHomeName.textContent = homeTeamName;
     if (cardAwayName) cardAwayName.textContent = awayTeamName;
@@ -2048,7 +2039,9 @@ document.addEventListener('DOMContentLoaded', () => {
         : `${isTopInning ? 'Top' : 'Bot'} ${currentInning}`;
     }
 
-    const totalPitches = pitchData.home.total + pitchData.away.total;
+    const totalPitches = (typeof pitchData !== 'undefined' && pitchData.home && pitchData.away)
+      ? (pitchData.home.total + pitchData.away.total)
+      : 0;
     if (cardTotalPitches) cardTotalPitches.textContent = `${totalPitches} Pitches`;
 
     if (cardDateStamp) {
@@ -2360,6 +2353,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initial renders
+  setPitchCounterEnabled(pitchCounterEnabled);
+  setPitchCounterMode(pitchCounterMode);
+  renderRosterUI();
+  selectFieldSprayPoint(170, 115, 'Center Field (CF)');
+  renderOutcomeList('');
   updateInningDisplay();
   updateOutsDisplay();
   updateTimerUI();
