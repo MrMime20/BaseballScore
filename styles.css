@@ -1,4 +1,4 @@
-/* styles.css - Baseball Scorekeeper with Themes, Sliding Underline & Smooth Animations */
+/* styles.css - Baseball Scorekeeper with Themes, Sliding Underline, Share Menu & Custom Scrollbars */
 
 :root, body[data-theme="light"] {
   --bg-body: #f4f5f8;
@@ -17,6 +17,8 @@
   --toast-text: #ffffff;
   --toast-badge-bg: #ffffff;
   --toast-badge-text: #000000;
+  --preview-bg: #f8fafc;
+  --preview-border: #cbd5e1;
 }
 
 body[data-theme="dark"] {
@@ -36,6 +38,8 @@ body[data-theme="dark"] {
   --toast-text: #ffffff;
   --toast-badge-bg: #10b981;
   --toast-badge-text: #ffffff;
+  --preview-bg: #0b0d12;
+  --preview-border: #2e384d;
 }
 
 body[data-theme="ballpark"] {
@@ -55,6 +59,8 @@ body[data-theme="ballpark"] {
   --toast-text: #fcf9ee;
   --toast-badge-bg: #f59e0b;
   --toast-badge-text: #06170f;
+  --preview-bg: #091f14;
+  --preview-border: #23543b;
 }
 
 body[data-theme="royal"] {
@@ -74,6 +80,8 @@ body[data-theme="royal"] {
   --toast-text: #ffffff;
   --toast-badge-bg: #ef4444;
   --toast-badge-text: #ffffff;
+  --preview-bg: #0b1526;
+  --preview-border: #2b4673;
 }
 
 body[data-theme="vintage"] {
@@ -93,6 +101,8 @@ body[data-theme="vintage"] {
   --toast-text: #f9f5eb;
   --toast-badge-bg: #c2410c;
   --toast-badge-text: #ffffff;
+  --preview-bg: #f2ebd9;
+  --preview-border: #d4c5ae;
 }
 
 * {
@@ -103,6 +113,12 @@ body[data-theme="vintage"] {
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+  width: 100%;
+}
+
 body {
   background-color: var(--bg-body);
   color: var(--text-primary);
@@ -110,16 +126,17 @@ body {
   justify-content: center;
   align-items: flex-start;
   min-height: 100vh;
-  padding: 20px;
+  padding: 16px 12px;
   transition: background-color 0.35s ease, color 0.35s ease;
 }
 
 .scoreboard-container {
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   background-color: transparent;
   position: relative;
 }
@@ -133,41 +150,45 @@ button {
   color: inherit;
 }
 
-/* Common border styling matching the high-contrast thick outline */
+/* Common border styling */
 .top-row .icon-btn,
 .timer-display,
 .score-card,
 .outs-container,
 .inning-container {
-  border: 6px solid var(--border-color);
+  border: 5px solid var(--border-color);
   background-color: var(--bg-card);
-  box-shadow: 0 8px 24px var(--shadow-color);
+  box-shadow: 0 6px 20px var(--shadow-color);
   transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease, transform 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* Top Row */
+/* ========================================================================= */
+/* Top Row Header & Compact Timer                                            */
+/* ========================================================================= */
+
 .top-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  width: 100%;
 }
 
 .icon-btn {
-  width: 64px;
-  height: 64px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: 20px;
   flex-shrink: 0;
   color: var(--text-primary);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.35s ease;
 }
 
 .icon-btn:hover {
-  transform: scale(1.05);
+  transform: scale(1.06);
 }
 
 .icon-btn:active {
@@ -183,77 +204,86 @@ button {
   100% { transform: rotate(180deg); }
 }
 
-/* Interactive Timer Display */
+/* Interactive Compact Timer Display */
 .timer-display {
-  flex-grow: 1;
-  height: 64px;
-  border-radius: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px 0 14px;
-  user-select: none;
-  position: relative;
-  cursor: pointer;
-}
-
-.timer-btn {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  flex: 1;
+  min-width: 0;
+  height: 56px;
+  border-radius: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  color: var(--text-primary);
-  opacity: 0.65;
-  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
+  gap: 8px;
+  padding: 0 12px;
+  user-select: none;
+  cursor: pointer;
+  transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.timer-display:hover {
+  transform: scale(1.02);
+}
+
+.timer-display:active {
+  transform: scale(0.97);
+}
+
+.timer-status-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 10px;
+  color: var(--accent-color);
+  background-color: rgba(125, 125, 125, 0.12);
+  transition: all 0.25s ease;
   flex-shrink: 0;
 }
 
-.timer-btn:hover {
-  opacity: 1;
-  background-color: rgba(125, 125, 125, 0.15);
-  transform: scale(1.1);
-}
-
-.timer-btn:active {
-  transform: scale(0.88);
-}
-
-.timer-btn.reset-btn {
-  font-size: 13px;
-  opacity: 0.45;
-}
-
-.timer-btn.reset-btn:hover {
-  opacity: 1;
-  color: #ef4444;
-}
-
 .timer-digits {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
-  transition: opacity 0.3s ease, transform 0.2s ease;
+  transition: opacity 0.3s ease, color 0.3s ease;
+}
+
+/* Paused Timer State */
+.timer-display.paused {
+  border-color: #ef4444;
+}
+
+.timer-display.paused .timer-status-badge {
+  background-color: #ef4444;
+  color: #ffffff;
+  animation: pulseBadge 1.2s infinite ease-in-out;
 }
 
 .timer-display.paused .timer-digits {
   animation: timerBlink 1.4s infinite ease-in-out;
-  color: var(--accent-color);
+  color: #ef4444;
+}
+
+@keyframes pulseBadge {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
 }
 
 @keyframes timerBlink {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.35; }
+  50% { opacity: 0.45; }
 }
 
-/* Main Score Card */
+/* ========================================================================= */
+/* Main Score Card & Sliding Underline                                       */
+/* ========================================================================= */
+
 .score-card {
-  border-radius: 36px;
-  padding: 24px 20px 24px 20px;
+  border-radius: 34px;
+  padding: 20px 16px 22px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -264,14 +294,14 @@ button {
   align-items: center;
   justify-content: center;
   width: 100%;
-  gap: 12px;
+  gap: 10px;
 }
 
 .score-num {
-  font-size: 96px;
+  font-size: 92px;
   font-weight: 800;
   line-height: 1;
-  padding: 0 10px;
+  padding: 0 8px;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
   user-select: none;
   touch-action: none;
@@ -288,13 +318,13 @@ button {
 }
 
 .score-dash {
-  font-size: 70px;
+  font-size: 64px;
   font-weight: 800;
   line-height: 1;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   user-select: none;
   color: var(--text-primary);
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 /* Team Labels & Smooth Sliding Underline */
@@ -303,13 +333,13 @@ button {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  padding: 0 18px;
-  margin-top: 10px;
+  padding: 0 16px;
+  margin-top: 8px;
   position: relative;
 }
 
 .team-label {
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 800;
   user-select: none;
   cursor: pointer;
@@ -330,7 +360,7 @@ button {
 }
 
 .team-label:not(.batting) {
-  opacity: 0.38;
+  opacity: 0.35;
 }
 
 /* Physical Sliding Underline Indicator */
@@ -341,24 +371,28 @@ button {
   height: 5px;
   background-color: var(--accent-color);
   border-radius: 4px;
-  box-shadow: 0 2px 10px var(--shadow-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
   transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.15), width 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.15), background-color 0.35s ease;
   pointer-events: none;
   will-change: transform, width;
 }
 
-/* Bottom Row */
+/* ========================================================================= */
+/* Bottom Row: Outs & Inning Controls                                        */
+/* ========================================================================= */
+
 .bottom-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  width: 100%;
 }
 
 .outs-container {
-  flex: 1.5;
-  height: 68px;
-  border-radius: 34px;
+  flex: 1.4;
+  height: 64px;
+  border-radius: 32px;
   display: flex;
   align-items: center;
   justify-content: space-evenly;
@@ -369,8 +403,8 @@ button {
 }
 
 .out-circle {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 5px solid var(--border-color);
   background-color: transparent;
@@ -388,20 +422,20 @@ button {
 
 .inning-container {
   flex: 1.1;
-  height: 68px;
-  border-radius: 34px;
+  height: 64px;
+  border-radius: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 0 14px;
+  padding: 0 12px;
   user-select: none;
   touch-action: none;
   cursor: pointer;
 }
 
 .inning-num {
-  font-size: 40px;
+  font-size: 38px;
   font-weight: 800;
   line-height: 1;
   margin-right: 2px;
@@ -423,7 +457,7 @@ button {
 }
 
 .arrow-btn {
-  font-size: 20px;
+  font-size: 19px;
   line-height: 1;
   padding: 2px 6px;
   border-radius: 6px;
@@ -439,11 +473,10 @@ button {
   opacity: 0.7;
 }
 
-/* Highlighted Arrow when active (Top vs Bottom) */
 .arrow-btn.active {
   color: var(--accent-color);
   opacity: 1;
-  transform: scale(1.32);
+  transform: scale(1.3);
 }
 
 .arrow-btn:active {
@@ -457,14 +490,14 @@ button {
 
 @keyframes smoothPop {
   0% { transform: scale(1); }
-  45% { transform: scale(1.1); }
+  45% { transform: scale(1.08); }
   100% { transform: scale(1); }
 }
 
 /* Inning Transition / 3 Outs Toast Notification */
 .inning-transition-toast {
   position: absolute;
-  top: 94px;
+  top: 86px;
   left: 50%;
   transform: translateX(-50%) translateY(-14px) scale(0.92);
   background-color: var(--toast-bg);
@@ -519,7 +552,6 @@ button {
   100% { transform: scale(1); }
 }
 
-/* Pulse effect on Inning Container when advancing half/inning */
 .inning-container.pulse-transition {
   animation: pulseInningEffect 0.55s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -531,7 +563,52 @@ button {
 }
 
 /* ========================================================================= */
-/* Settings Rollout Drawer & Themes Modal                                    */
+/* Custom Scrollbars for Drawers / Menus                                     */
+/* ========================================================================= */
+
+.settings-drawer::-webkit-scrollbar,
+.share-drawer::-webkit-scrollbar,
+.drawer-body::-webkit-scrollbar,
+.share-preview-box::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.settings-drawer::-webkit-scrollbar-track,
+.share-drawer::-webkit-scrollbar-track,
+.drawer-body::-webkit-scrollbar-track,
+.share-preview-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.settings-drawer::-webkit-scrollbar-thumb,
+.share-drawer::-webkit-scrollbar-thumb,
+.drawer-body::-webkit-scrollbar-thumb,
+.share-preview-box::-webkit-scrollbar-thumb {
+  background-color: var(--border-color);
+  opacity: 0.3;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+}
+
+.settings-drawer::-webkit-scrollbar-thumb:hover,
+.share-drawer::-webkit-scrollbar-thumb:hover,
+.drawer-body::-webkit-scrollbar-thumb:hover,
+.share-preview-box::-webkit-scrollbar-thumb:hover {
+  background-color: var(--accent-color);
+}
+
+/* Firefox scrollbar */
+.settings-drawer,
+.share-drawer,
+.drawer-body,
+.share-preview-box {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color) transparent;
+}
+
+/* ========================================================================= */
+/* Drawers (Settings & Share)                                                */
 /* ========================================================================= */
 
 .settings-backdrop {
@@ -563,7 +640,7 @@ button {
   border: 5px solid var(--border-color);
   border-bottom: none;
   box-shadow: 0 -16px 48px var(--shadow-color);
-  max-height: 85vh;
+  max-height: 86vh;
   overflow-y: auto;
   transform: translateY(105%);
   transition: transform 0.44s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease;
@@ -577,11 +654,11 @@ button {
 }
 
 .drawer-header {
-  padding: 16px 20px 12px 20px;
+  padding: 14px 20px 10px 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   border-bottom: 2px solid var(--drawer-border);
   position: sticky;
   top: 0;
@@ -590,11 +667,11 @@ button {
 }
 
 .drawer-handle-bar {
-  width: 44px;
+  width: 42px;
   height: 5px;
   border-radius: 3px;
   background-color: var(--border-color);
-  opacity: 0.3;
+  opacity: 0.25;
 }
 
 .drawer-title-row {
@@ -605,7 +682,7 @@ button {
 }
 
 .drawer-title-row h2 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 800;
   display: flex;
   align-items: center;
@@ -614,14 +691,14 @@ button {
 }
 
 .close-drawer-btn {
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
   border: 2px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-primary);
   background-color: var(--drawer-card);
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease;
@@ -636,10 +713,10 @@ button {
 }
 
 .drawer-body {
-  padding: 20px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 20px;
 }
 
 .settings-group {
@@ -652,14 +729,14 @@ button {
   font-size: 12px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.8px;
   color: var(--text-secondary);
 }
 
 /* Themes Grid */
 .themes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
   gap: 10px;
 }
 
@@ -689,7 +766,7 @@ button {
 
 .theme-preview {
   width: 100%;
-  height: 40px;
+  height: 38px;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -797,7 +874,7 @@ button {
   box-shadow: 0 0 0 3px rgba(125, 125, 125, 0.2);
 }
 
-/* Action Buttons */
+/* Action Buttons in Settings */
 .actions-row {
   display: flex;
   gap: 10px;
@@ -841,3 +918,1202 @@ button {
 .action-btn.danger:hover {
   background-color: rgba(239, 68, 68, 0.1);
 }
+
+/* ========================================================================= */
+/* Share Drawer Components (Summary Formats, Preview & Channels)             */
+/* ========================================================================= */
+
+.summary-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.summary-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 2.5px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  text-align: left;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.summary-card i {
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.summary-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.summary-card-name {
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-card-desc {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.summary-card:hover {
+  border-color: var(--border-color);
+  transform: translateY(-1px);
+}
+
+.summary-card.active {
+  border-color: var(--accent-color);
+  background-color: rgba(125, 125, 125, 0.12);
+  transform: scale(1.02);
+}
+
+.summary-card.active i {
+  color: var(--accent-color);
+}
+
+/* Preview Box */
+.preview-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.copy-preview-btn {
+  padding: 4px 10px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+}
+
+.copy-preview-btn:hover {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+.share-preview-box {
+  background-color: var(--preview-bg);
+  border: 2px solid var(--preview-border);
+  border-radius: 14px;
+  padding: 12px 14px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.share-preview-box pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0;
+}
+
+/* Share Channels Grid */
+.share-channels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.share-channel-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border-radius: 14px;
+  border: 2px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.share-channel-btn i {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+}
+
+.share-channel-btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--border-color);
+}
+
+.share-channel-btn:active {
+  transform: scale(0.94);
+}
+
+/* Individual Channel Hover Highlights */
+.share-channel-btn.sms:hover {
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.share-channel-btn.whatsapp:hover {
+  border-color: #25d366;
+  color: #25d366;
+}
+
+.share-channel-btn.twitter:hover {
+  border-color: #1d9bf0;
+  color: #1d9bf0;
+}
+
+.share-channel-btn.email:hover {
+  border-color: #f59e0b;
+  color: #f59e0b;
+}
+
+.share-channel-btn.copy:hover,
+.share-channel-btn.native:hover {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+/* ========================================================================= */
+/* Advanced Tools Tab Bar & Trigger                                          */
+/* ========================================================================= */
+
+.advanced-tab-bar {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 2px;
+}
+
+.advanced-tools-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 22px;
+  border: 4px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 14px var(--shadow-color);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.advanced-tools-tab-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--shadow-color);
+}
+
+.advanced-tools-tab-btn:active {
+  transform: scale(0.95);
+}
+
+.tab-arrow {
+  font-size: 11px;
+  transition: transform 0.25s ease;
+}
+
+.advanced-tools-tab-btn:hover .tab-arrow {
+  transform: translateY(-2px);
+}
+
+/* ========================================================================= */
+/* Advanced Tools Drawer Navigation & Panels                                 */
+/* ========================================================================= */
+
+.advanced-drawer {
+  max-height: 88vh;
+}
+
+.advanced-nav-pills {
+  display: flex;
+  gap: 6px;
+  width: 100%;
+  overflow-x: auto;
+  padding: 6px 0 2px 0;
+  scrollbar-width: none;
+}
+
+.advanced-nav-pills::-webkit-scrollbar {
+  display: none;
+}
+
+.nav-pill-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 2px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+.nav-pill-btn i {
+  font-size: 12px;
+}
+
+.nav-pill-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.nav-pill-btn.active {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  border-color: var(--border-color);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.nav-pill-btn.finish-pill.active {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+  color: #ffffff;
+}
+
+.advanced-panel {
+  display: none;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1), transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.advanced-panel.active {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================================================= */
+/* 1. Pitch Counter Panel Styles                                             */
+/* ========================================================================= */
+
+.pitcher-team-toggle {
+  display: flex;
+  background-color: var(--drawer-card);
+  border: 2px solid var(--drawer-border);
+  border-radius: 14px;
+  padding: 3px;
+  gap: 4px;
+}
+
+.pitch-team-btn {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.pitch-team-btn.active {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  box-shadow: 0 2px 6px var(--shadow-color);
+}
+
+.pitch-display-card {
+  background-color: var(--drawer-card);
+  border: 3px solid var(--border-color);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 6px 16px var(--shadow-color);
+}
+
+.pitch-main-count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.pitch-number {
+  font-size: 54px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+  transition: transform 0.15s ease;
+}
+
+.pitch-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.pitch-stats-row {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 2px dashed var(--drawer-border);
+}
+
+.pitch-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.stat-num {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.stat-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.pitch-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.pitch-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pitch-action-btn:hover {
+  transform: translateY(-2px);
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+.pitch-action-btn:active {
+  transform: scale(0.95);
+}
+
+.pitch-action-btn.strike:hover {
+  border-color: #22c55e;
+  background-color: #22c55e;
+  color: #ffffff;
+}
+
+.pitch-action-btn.ball:hover {
+  border-color: #ef4444;
+  background-color: #ef4444;
+  color: #ffffff;
+}
+
+.pitch-action-btn.foul:hover {
+  border-color: #f59e0b;
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.pitch-action-btn.inplay:hover {
+  border-color: #3b82f6;
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+.pitch-secondary-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ========================================================================= */
+/* 2. Hit Log Panel Styles (Field Diagram & Outcomes)                        */
+/* ========================================================================= */
+
+.log-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.section-heading {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-primary);
+}
+
+.selected-zone-tag {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent-color);
+  background-color: rgba(125, 125, 125, 0.12);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.batter-selector-row {
+  display: flex;
+  gap: 8px;
+}
+
+.team-mini-toggle {
+  display: flex;
+  background-color: var(--drawer-card);
+  border: 1.5px solid var(--drawer-border);
+  border-radius: 10px;
+  padding: 2px;
+  flex-shrink: 0;
+}
+
+.mini-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.mini-btn.active {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+.player-input-wrap {
+  flex: 1;
+}
+
+.player-input-wrap input {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 2px solid var(--border-color);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  outline: none;
+}
+
+.quick-player-chips {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+
+.quick-player-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip-btn {
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.chip-btn.active {
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+/* Baseball Field Diagram SVG */
+.field-diagram-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--drawer-card);
+  border: 3px solid var(--border-color);
+  border-radius: 20px;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 14px var(--shadow-color);
+}
+
+.baseball-field-svg {
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  user-select: none;
+}
+
+.field-grass {
+  fill: #15803d;
+  opacity: 0.85;
+}
+
+.field-grass-inner {
+  fill: #16a34a;
+}
+
+.field-dirt {
+  fill: #b45309;
+  opacity: 0.7;
+}
+
+.field-line {
+  stroke: #ffffff;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.field-mound {
+  fill: #d97706;
+}
+
+.field-plate {
+  fill: #ffffff;
+}
+
+.zone-poly, .zone-circle {
+  fill: rgba(255, 255, 255, 0.08);
+  stroke: rgba(255, 255, 255, 0.4);
+  stroke-width: 1.5;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.zone-poly:hover, .zone-circle:hover {
+  fill: rgba(245, 158, 11, 0.4);
+  stroke: #f59e0b;
+}
+
+.zone-poly.active, .zone-circle.active {
+  fill: rgba(239, 68, 68, 0.6);
+  stroke: #ffffff;
+  stroke-width: 2;
+  filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.8));
+}
+
+.spray-marker {
+  fill: #ef4444;
+  stroke: #ffffff;
+  stroke-width: 2;
+  transition: cx 0.25s cubic-bezier(0.16, 1, 0.3, 1), cy 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Outcomes Grid */
+.outcomes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: 6px;
+}
+
+.outcome-btn {
+  padding: 8px 6px;
+  border-radius: 10px;
+  border: 1.5px solid var(--drawer-border);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 800;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.outcome-btn:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-color);
+}
+
+.outcome-btn.active {
+  border-color: var(--border-color);
+  background-color: var(--border-color);
+  color: var(--bg-card);
+  transform: scale(1.03);
+}
+
+.outcome-btn.hit.active {
+  background-color: #22c55e;
+  border-color: #22c55e;
+  color: #ffffff;
+}
+
+.outcome-btn.hr.active {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #ffffff;
+}
+
+.outcome-btn.out.active {
+  background-color: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.log-hit-commit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 3px solid var(--border-color);
+  background-color: var(--accent-color);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--shadow-color);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.log-hit-commit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--shadow-color);
+}
+
+.log-hit-commit-btn:active {
+  transform: scale(0.96);
+}
+
+/* Hit Log History Card */
+.hit-log-history-card {
+  background-color: var(--drawer-card);
+  border: 2px solid var(--drawer-border);
+  border-radius: 16px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.clear-log-btn {
+  font-size: 11px;
+  font-weight: 700;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+.hit-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.empty-log-notice {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 10px 0;
+  font-style: italic;
+}
+
+.hit-log-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--drawer-border);
+  font-size: 11px;
+  animation: smoothPop 0.2s ease;
+}
+
+.item-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.item-badge {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 2px 6px;
+  border-radius: 6px;
+  color: #ffffff;
+}
+
+.item-badge.hit { background-color: #22c55e; }
+.item-badge.hr { background-color: #f59e0b; }
+.item-badge.out { background-color: #ef4444; }
+.item-badge.misc { background-color: #64748b; }
+
+.item-player {
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.item-zone {
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.delete-hit-btn {
+  color: #a1a1aa;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+}
+
+.delete-hit-btn:hover {
+  color: #ef4444;
+}
+
+/* ========================================================================= */
+/* 3. Box Score Panel Styles (Inning Linescore Table)                        */
+/* ========================================================================= */
+
+.box-score-card {
+  background-color: var(--drawer-card);
+  border: 3px solid var(--border-color);
+  border-radius: 20px;
+  padding: 12px;
+  box-shadow: 0 4px 14px var(--shadow-color);
+}
+
+.box-score-table-wrap {
+  overflow-x: auto;
+  width: 100%;
+}
+
+.linescore-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 12px;
+}
+
+.linescore-table th, .linescore-table td {
+  padding: 6px 4px;
+  border: 1px solid var(--drawer-border);
+}
+
+.linescore-table th {
+  background-color: rgba(125, 125, 125, 0.08);
+  font-weight: 800;
+  color: var(--text-secondary);
+}
+
+.linescore-table th.team-cell, .linescore-table td.team-cell {
+  text-align: left;
+  font-weight: 800;
+  padding-left: 8px;
+  width: 65px;
+  white-space: nowrap;
+}
+
+.linescore-table .stat-head {
+  background-color: rgba(125, 125, 125, 0.16);
+  font-weight: 900;
+}
+
+.linescore-table .total-stat {
+  font-weight: 900;
+  background-color: rgba(125, 125, 125, 0.08);
+}
+
+.linescore-table .total-stat.runs {
+  color: var(--accent-color);
+  font-size: 13px;
+}
+
+.linescore-table .inn-cell {
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.linescore-table .inn-cell:hover {
+  background-color: rgba(125, 125, 125, 0.2);
+}
+
+/* Error Stepper Controls */
+.errors-stepper-row {
+  display: flex;
+  gap: 10px;
+}
+
+.error-stepper-card {
+  flex: 1;
+  background-color: var(--drawer-card);
+  border: 2px solid var(--drawer-border);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.stepper-team {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.stepper-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mini-circle-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.mini-circle-btn:active {
+  transform: scale(0.88);
+}
+
+.stepper-val {
+  font-size: 16px;
+  font-weight: 900;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ========================================================================= */
+/* 4. Finish Game Pictureized Summary Panel Styles                           */
+/* ========================================================================= */
+
+.finish-game-header-bar {
+  display: flex;
+  width: 100%;
+}
+
+.finish-game-action-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  border: 3px solid var(--border-color);
+  background-color: var(--accent-color);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 14px var(--shadow-color);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.finish-game-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px var(--shadow-color);
+}
+
+.finish-game-action-btn:active {
+  transform: scale(0.96);
+}
+
+.finish-game-action-btn.finalized {
+  background-color: #10b981;
+  border-color: #10b981;
+}
+
+.picture-summary-card {
+  background-color: var(--bg-card);
+  border: 5px solid var(--border-color);
+  border-radius: 26px;
+  padding: 18px;
+  box-shadow: 0 10px 28px var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-brand-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--text-secondary);
+}
+
+.brand-left i {
+  color: var(--accent-color);
+}
+
+.card-final-tag {
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  padding: 3px 10px;
+  border-radius: 12px;
+}
+
+/* Matchup Banner */
+.card-matchup-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background-color: var(--drawer-card);
+  border-radius: 18px;
+  border: 2px solid var(--drawer-border);
+}
+
+.card-team-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+}
+
+.card-team-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  max-width: 90px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-team-score {
+  font-size: 46px;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--text-primary);
+}
+
+.card-vs-divider {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--text-secondary);
+  padding: 0 8px;
+}
+
+/* Card Line score */
+.card-linescore-wrap {
+  width: 100%;
+}
+
+.card-linescore-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  font-size: 12px;
+}
+
+.card-linescore-table th, .card-linescore-table td {
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--drawer-border);
+}
+
+.card-linescore-table th {
+  font-weight: 800;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.card-linescore-table td.bold {
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--accent-color);
+}
+
+/* Game Stats Bar */
+.card-game-stats-bar {
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.stat-pill {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background-color: var(--drawer-card);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.stat-pill i {
+  color: var(--accent-color);
+  font-size: 11px;
+}
+
+.card-footer-stamp {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: var(--text-secondary);
+  padding-top: 4px;
+  border-top: 1px dashed var(--drawer-border);
+}
+
+/* Picture Actions */
+.picture-actions-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.export-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 2px solid var(--border-color);
+  background-color: var(--drawer-card);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  background-color: var(--border-color);
+  color: var(--bg-card);
+}
+
+.export-btn:active {
+  transform: scale(0.95);
+}
+
+.export-btn.primary {
+  background-color: var(--accent-color);
+  color: #ffffff;
+  border-color: var(--accent-color);
+}
+
+.export-btn.primary:hover {
+  background-color: var(--border-color);
+  border-color: var(--border-color);
+  color: var(--bg-card);
+}
+
