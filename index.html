@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Baseball Score Keeper</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <div class="scoreboard-container">
+    
+    <!-- Top Row Header -->
+    <header class="top-row">
+      <button class="icon-btn" id="share-btn" aria-label="Share">
+        <i class="fa-solid fa-share-nodes"></i>
+      </button>
+      
+      <div class="timer-display" id="timer">00:00:00</div>
+      
+      <button class="icon-btn" id="settings-btn" aria-label="Settings">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </header>
+
+    <!-- Main Score Card -->
+    <main class="score-card">
+      <div class="scores">
+        <button class="score-num" id="home-score" title="Tap or swipe up to add run; swipe down to remove">4</button>
+        <span class="score-dash">-</span>
+        <button class="score-num" id="away-score" title="Tap or swipe up to add run; swipe down to remove">0</button>
+      </div>
+      <div class="labels">
+        <span class="team-label" id="home-label">Home</span>
+        <span class="team-label" id="away-label">Away</span>
+      </div>
+    </main>
+
+    <!-- Inning Transition / Side Retired Visual Indicator -->
+    <div class="inning-transition-toast" id="inning-toast" role="status" aria-live="polite">
+      <span class="toast-badge" id="toast-badge">3 OUTS</span>
+      <span class="toast-text" id="toast-message">TOP 1 → BOT 1</span>
+    </div>
+
+    <!-- Bottom Controls Row -->
+    <footer class="bottom-row">
+      <!-- Outs Selector Container -->
+      <div class="outs-container" id="outs-container" title="Tap or swipe up/down to add or remove outs">
+        <button type="button" class="out-circle" data-out="1" aria-label="Out 1"></button>
+        <button type="button" class="out-circle" data-out="2" aria-label="Out 2"></button>
+        <button type="button" class="out-circle" data-out="3" aria-label="Out 3"></button>
+      </div>
+
+      <!-- Inning Stepper Container -->
+      <div class="inning-container" id="inning-container" title="Tap arrows for Top/Bottom; swipe up/down on inning to change">
+        <span class="inning-num" id="inning-val" aria-label="Current Inning">1</span>
+        <div class="inning-arrows">
+          <button type="button" class="arrow-btn active" id="inning-up" aria-label="Top of Inning" title="Top of Inning">
+            <i class="fa-solid fa-caret-up"></i>
+          </button>
+          <button type="button" class="arrow-btn" id="inning-down" aria-label="Bottom of Inning" title="Bottom of Inning">
+            <i class="fa-solid fa-caret-down"></i>
+          </button>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
