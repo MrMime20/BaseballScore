@@ -78,6 +78,12 @@
       </div>
     </footer>
 
+    <!-- Advanced Tools Button -->
+    <button type="button" class="advanced-tools-btn" id="advanced-tools-btn" aria-label="Advanced Tools" title="Advanced Tools">
+      <i class="fa-solid fa-screwdriver-wrench"></i>
+      <span>Advanced Tools</span>
+    </button>
+
     <!-- Settings Rollout Drawer & Backdrop -->
     <div class="settings-backdrop" id="settings-backdrop" aria-hidden="true">
       <div class="settings-drawer" id="settings-drawer" role="dialog" aria-modal="true" aria-labelledby="settings-title">
@@ -280,6 +286,162 @@
                 <span>Copy Score</span>
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Advanced Tools Rollout Drawer & Backdrop -->
+    <div class="settings-backdrop" id="advanced-backdrop" aria-hidden="true">
+      <div class="settings-drawer advanced-drawer" id="advanced-drawer" role="dialog" aria-modal="true" aria-labelledby="advanced-title">
+        <div class="drawer-header">
+          <div class="drawer-handle-bar"></div>
+          <div class="drawer-title-row">
+            <h2 id="advanced-title"><i class="fa-solid fa-screwdriver-wrench"></i> Advanced Tools</h2>
+            <button type="button" class="close-drawer-btn" id="close-advanced-btn" aria-label="Close Advanced Tools">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="drawer-body advanced-drawer-body">
+          <div class="canvas-modules-list" id="canvas-modules-list">
+
+            <!-- Module 1: Hit Log (Canvas Module Style) -->
+            <div class="canvas-module open" id="module-hit-log">
+              <div class="module-header" id="module-hit-log-header" role="button" tabindex="0" aria-expanded="true">
+                <div class="module-header-left">
+                  <i class="fa-solid fa-chevron-down module-chevron" id="chevron-hit-log"></i>
+                  <span class="module-title-text"><i class="fa-solid fa-baseball"></i> Hit Log</span>
+                </div>
+                <div class="module-header-right">
+                  <span class="module-badge" id="hit-log-badge">0 Logged</span>
+                </div>
+              </div>
+
+              <div class="module-body" id="module-hit-log-body">
+                <!-- Minimalist Hit Logging Form -->
+                <div class="hit-form-card">
+                  
+                  <!-- Team & Inning Context Bar -->
+                  <div class="hit-context-bar">
+                    <div class="hit-team-toggle-group">
+                      <button type="button" class="hit-team-btn" id="hit-team-away">Away</button>
+                      <button type="button" class="hit-team-btn active" id="hit-team-home">Home</button>
+                    </div>
+                    <span class="hit-inning-chip" id="hit-current-inning-chip">Inning 1</span>
+                  </div>
+
+                  <!-- Player Name/Number & Outcome Row -->
+                  <div class="hit-inputs-row">
+                    <div class="hit-field-block">
+                      <label for="hit-player-input" class="hit-field-label">Player Name / #</label>
+                      <input type="text" id="hit-player-input" class="hit-text-input" placeholder="e.g. #7 Smith" maxlength="24" autocomplete="off" />
+                    </div>
+
+                    <div class="hit-field-block">
+                      <label for="hit-outcome-select" class="hit-field-label">Outcome</label>
+                      <select id="hit-outcome-select" class="hit-dropdown">
+                        <option value="Single">Single (1B)</option>
+                        <option value="Double">Double (2B)</option>
+                        <option value="Triple">Triple (3B)</option>
+                        <option value="Home Run">Home Run (HR)</option>
+                        <option value="Flyout">Flyout (Out)</option>
+                        <option value="Groundout">Groundout (Out)</option>
+                        <option value="Strikeout">Strikeout (K)</option>
+                        <option value="Walk">Walk (BB)</option>
+                        <option value="Error">Reached on Error</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Interactive Baseball Diamond Section -->
+                  <div class="diamond-section-block">
+                    <div class="diamond-header-row">
+                      <label class="hit-field-label">Tap Field Where Ball Landed</label>
+                      <span class="hit-location-tag" id="hit-location-tag">Center Field</span>
+                    </div>
+
+                    <!-- Interactive Baseball Diamond (User's Stadium) -->
+                    <div class="stadium-viewport" id="stadium-viewport" title="Tap where ball was hit">
+                      <div id="stadium">
+                        <div id="field" class="mowed-grass"></div>
+                        <div id="in-field"></div>
+                        <div id="in-field-grass" class="mowed-grass"></div>
+                        <div id="batting-circle"></div>
+                        <div id="first-base" class="base">
+                          <div class="pulse"></div>
+                          <div class="action-area"></div>
+                        </div>
+                        <div id="second-base" class="base">
+                          <div class="pulse"></div>
+                          <div class="action-area"></div>
+                        </div>
+                        <div id="thrid-base" class="base">
+                          <div class="pulse"></div>
+                          <div class="action-area"></div>
+                        </div>
+                        <div id="home-plate">
+                          <div class="action-area"></div>
+                        </div>
+                        <div class="home-plate-pulse pulse"></div>
+                        <div id="base-lines"></div>
+                        <div id="pitchers-mound"></div>
+                        <div id="pitchers-plate"></div>
+                        <div id="first-circle" class="half-circle"></div>
+                        <div id="second-circle" class="half-circle"></div>
+                        <div id="third-circle" class="half-circle"></div>
+                        <div id="batters-box-right" class="batters-box"></div>
+                        <div id="batters-box-left" class="batters-box"></div>
+                        <div id="first-base-thing"></div>
+                        <!-- Ball Hit Marker -->
+                        <div id="stadium-hit-marker" class="stadium-ball-pin">
+                          <div class="ball-pin-core"><i class="fa-solid fa-baseball"></i></div>
+                          <div class="ball-pin-ring"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Submit Log Button -->
+                  <button type="button" class="log-hit-submit-btn" id="log-hit-submit-btn">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Save Hit</span>
+                  </button>
+                </div>
+
+                <!-- Logged Hits List -->
+                <div class="logged-hits-wrapper">
+                  <div class="logged-hits-header">
+                    <span class="logged-hits-title">Game Hits</span>
+                    <button type="button" class="clear-hits-btn" id="clear-hits-btn" title="Clear all logged hits">Clear All</button>
+                  </div>
+                  <div class="logged-hits-list" id="logged-hits-list">
+                    <!-- Populated dynamically -->
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Module 2: Bleacher Notes (Canvas Style Module) -->
+            <div class="canvas-module collapsed" id="module-notes">
+              <div class="module-header" id="module-notes-header" role="button" tabindex="0" aria-expanded="false">
+                <div class="module-header-left">
+                  <i class="fa-solid fa-chevron-right module-chevron" id="chevron-notes"></i>
+                  <span class="module-title-text"><i class="fa-solid fa-clipboard-list"></i> Bleacher Notes</span>
+                </div>
+                <div class="module-header-right">
+                  <span class="module-badge">Quick Memo</span>
+                </div>
+              </div>
+
+              <div class="module-body" id="module-notes-body" style="display: none;">
+                <div class="notes-module-inner">
+                  <textarea id="bleacher-notes-input" class="bleacher-notes-textarea" placeholder="Jot down quick reminders (pitchers, umpire calls, lineup notes)..."></textarea>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
