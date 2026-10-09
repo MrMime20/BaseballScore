@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let isTopInning = true; // true = Top (Away bats), false = Bottom (Home bats)
   let currentOuts = 0;
   let secondsElapsed = 0;
-  let isTimerRunning = true;
+  let isTimerRunning = false;
   let timerInterval = null;
 
   let homeTeamName = localStorage.getItem('baseball_home_team') || 'Home';
@@ -66,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const shareSmsBtn = document.getElementById('share-sms-btn');
   const shareEmailBtn = document.getElementById('share-email-btn');
   const shareCopyBtn = document.getElementById('share-copy-btn');
+
+  // Advanced Tools Elements
+  const advancedToolsBtn = document.getElementById('advanced-tools-btn');
+  const advancedBackdrop = document.getElementById('advanced-backdrop');
+  const closeAdvancedBtn = document.getElementById('close-advanced-btn');
 
   // Timeouts & Tracking
   let sideChangeTimeout = null;
@@ -326,11 +331,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Unified Tap-And-Hold Controller ---
   // TAP: increases by 1
   // HOLD (>= 400ms): decreases by 1, and continues stepping down incrementally every 500ms
-  function setupTapAndHold(element, { onIncrease, onDecrease, holdDelay = 400, stepInterval = 500, onSwipeUp, onSwipeDown }) {
+  function setupTapAndHold(element, { onIncrease, onDecrease, holdDelay = 400, stepInterval = 500, onSwipeUp, onSwipeDown, itemName = 'Item', toastTag = 'SCORE' }) {
     if (!element) return;
     let holdTimeout = null;
     let holdInterval = null;
     let isHolding = false;
+    let holdCount = 0;
     let startTime = 0;
     let startY = 0;
     let movedFar = false;
@@ -339,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
       isHolding = false;
       movedFar = false;
+      holdCount = 0;
       startTime = Date.now();
       startY = e.clientY;
 
@@ -349,10 +356,15 @@ document.addEventListener('DOMContentLoaded', () => {
         isHolding = true;
         const couldDec = onDecrease();
         if (couldDec !== false) {
+          holdCount = 1;
+          showInningToast(toastTag, `${itemName} Removed x ${holdCount}`);
           holdInterval = setInterval(() => {
             const continueDec = onDecrease();
             if (continueDec === false) {
               clearInterval(holdInterval);
+            } else {
+              holdCount++;
+              showInningToast(toastTag, `${itemName} Removed x ${holdCount}`);
             }
           }, stepInterval);
         }
@@ -415,7 +427,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onIncrease: () => changeHomeScore(+1),
     onDecrease: () => changeHomeScore(-1),
     onSwipeUp: () => changeHomeScore(+1),
-    onSwipeDown: () => changeHomeScore(-1)
+    onSwipeDown: () => changeHomeScore(-1),
+    itemName: 'Run',
+    toastTag: 'HOME'
   });
 
   // 2. Away Score: Tap = +1, Hold = slow -1 decrement
@@ -423,7 +437,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onIncrease: () => changeAwayScore(+1),
     onDecrease: () => changeAwayScore(-1),
     onSwipeUp: () => changeAwayScore(+1),
-    onSwipeDown: () => changeAwayScore(-1)
+    onSwipeDown: () => changeAwayScore(-1),
+    itemName: 'Run',
+    toastTag: 'AWAY'
   });
 
   // 3. Inning Stepper: Tap = +1 half inning, Hold = slow -1 half inning decrement
@@ -431,7 +447,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onIncrease: () => advanceHalfInning(),
     onDecrease: () => decreaseHalfInning(),
     onSwipeUp: () => advanceHalfInning(),
-    onSwipeDown: () => decreaseHalfInning()
+    onSwipeDown: () => decreaseHalfInning(),
+    itemName: 'Half-Inning',
+    toastTag: 'INNING'
   });
 
   // 4. Outs Container: Tap anywhere = +1 Out, Hold = slow -1 decrement
@@ -439,7 +457,9 @@ document.addEventListener('DOMContentLoaded', () => {
     onIncrease: () => changeOuts(+1),
     onDecrease: () => changeOuts(-1),
     onSwipeUp: () => changeOuts(+1),
-    onSwipeDown: () => changeOuts(-1)
+    onSwipeDown: () => changeOuts(-1),
+    itemName: 'Out',
+    toastTag: 'OUTS'
   });
 
   // Tapping Home or Away team label swaps batting side
@@ -491,29 +511,33 @@ document.addEventListener('DOMContentLoaded', () => {
       timerDisplay.classList.toggle('paused', !isTimerRunning);
     }
     if (timerIcon) {
-      timerIcon.className = isTimerRunning ? 'fa-solid fa-play' : 'fa-solid fa-pause';
+      // When running: SHOW pause icon (clicking will pause)
+      // When paused: SHOW play icon (clicking will resume/play)
+      timerIcon.className = isTimerRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
     }
     if (modalTimerIcon) {
       modalTimerIcon.className = isTimerRunning ? 'fa-solid fa-pause' : 'fa-solid fa-play';
     }
     if (modalTimerText) {
-      modalTimerText.textContent = isTimerRunning ? 'Pause Clock' : 'Resume Clock';
+      modalTimerText.textContent = isTimerRunning ? 'Pause Clock' : 'Start Clock';
     }
   }
 
   function toggleTimer() {
     isTimerRunning = !isTimerRunning;
     updateTimerUI();
-    showInningToast('CLOCK', isTimerRunning ? 'RESUMED' : 'PAUSED');
+    showInningToast('CLOCK', isTimerRunning ? 'STARTED' : 'PAUSED');
     triggerHaptic(20);
   }
 
   function resetTimer() {
     secondsElapsed = 0;
+    isTimerRunning = false; // Paused by default when resetting clock
     if (timerEl) {
       timerEl.textContent = formatTime(0);
       triggerPop(timerDisplay);
     }
+    updateTimerUI();
     showInningToast('CLOCK', 'RESET (00:00:00)');
     updateSharePreview();
     triggerHaptic([30, 40]);
@@ -529,26 +553,72 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // --- Circular Paint-Out Theme Transition ---
-  // Paints outward in a circle starting from the center of the screen
+  // --- Circular Magnifying Glass Theme Transition (Slow & Smooth) ---
+  // Like placing a magnifying glass over the picture: the expanding circular lens reveals
+  // the entire application in the new theme wherever it touches, with old theme everywhere else
   function applyThemeWithCircularPaint(newTheme) {
     if (currentTheme === newTheme) return;
 
-    // Create full screen overlay positioned above backdrop
-    const reveal = document.createElement('div');
-    reveal.className = 'theme-circle-reveal';
-    reveal.setAttribute('data-theme', newTheme);
-    document.body.appendChild(reveal);
-
     triggerHaptic(30);
 
-    // Animate circular clip-path expanding outward from 50% 50% (screen center)
-    const anim = reveal.animate([
-      { clipPath: 'circle(0% at 50% 50%)', opacity: 1 },
-      { clipPath: 'circle(150% at 50% 50%)', opacity: 1 }
+    // Create the expanding magnifying glass rim ring at screen center
+    const ring = document.createElement('div');
+    ring.className = 'theme-magnifier-ring';
+    document.body.appendChild(ring);
+    setTimeout(() => {
+      ring.remove();
+    }, 1400);
+
+    // Modern View Transitions API (Chrome, Edge, Safari 18+)
+    if (typeof document.startViewTransition === 'function') {
+      try {
+        const transition = document.startViewTransition(() => {
+          document.body.setAttribute('data-theme', newTheme);
+          currentTheme = newTheme;
+          localStorage.setItem('baseball_theme', newTheme);
+
+          themeCards.forEach((c) => c.classList.toggle('active', c.getAttribute('data-theme') === newTheme));
+          updateUnderlinePosition();
+          fitTeamNames();
+        });
+
+        transition.finished.catch(() => {});
+        return;
+      } catch (_) {
+        // Fallback to clone overlay if View Transition throws
+      }
+    }
+
+    // High-fidelity DOM Clone Fallback (works in all webviews / browsers):
+    // Clones the application inside an overlay with data-theme="newTheme",
+    // expanding outward with circular clip-path like a magnifying lens.
+    const overlay = document.createElement('div');
+    overlay.className = 'theme-magnifier-clone-overlay';
+    overlay.setAttribute('data-theme', newTheme);
+
+    const container = document.querySelector('.scoreboard-container');
+    if (container) {
+      const clone = container.cloneNode(true);
+      // Synchronize input fields in clone
+      const cloneHome = clone.querySelector('#home-name-input');
+      const cloneAway = clone.querySelector('#away-name-input');
+      if (cloneHome && homeNameInput) cloneHome.value = homeNameInput.value;
+      if (cloneAway && awayNameInput) cloneAway.value = awayNameInput.value;
+      // Synchronize active theme card in clone
+      clone.querySelectorAll('.theme-card').forEach((c) => {
+        c.classList.toggle('active', c.getAttribute('data-theme') === newTheme);
+      });
+      overlay.appendChild(clone);
+    }
+
+    document.body.appendChild(overlay);
+
+    const anim = overlay.animate([
+      { clipPath: 'circle(0% at 50% 50%)' },
+      { clipPath: 'circle(160vmax at 50% 50%)' }
     ], {
-      duration: 620,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      duration: 1350,
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
       fill: 'forwards'
     });
 
@@ -560,19 +630,7 @@ document.addEventListener('DOMContentLoaded', () => {
       themeCards.forEach((c) => c.classList.toggle('active', c.getAttribute('data-theme') === newTheme));
       updateUnderlinePosition();
       fitTeamNames();
-
-      // Fade out overlay smoothly
-      const fadeOut = reveal.animate([
-        { opacity: 1 },
-        { opacity: 0 }
-      ], {
-        duration: 200,
-        easing: 'ease'
-      });
-
-      fadeOut.onfinish = () => {
-        reveal.remove();
-      };
+      overlay.remove();
     };
   }
 
@@ -677,6 +735,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isTopInning = true;
       currentOuts = 0;
       secondsElapsed = 0;
+      isTimerRunning = false;
 
       if (homeScoreEl) homeScoreEl.textContent = '0';
       if (awayScoreEl) awayScoreEl.textContent = '0';
@@ -815,11 +874,329 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Escape Key to close drawers
+  // --- Advanced Tools Drawer ---
+  function openAdvancedTools() {
+    if (!advancedBackdrop) return;
+    selectedHitTeam = isTopInning ? 'Away' : 'Home';
+    updateHitContextUI();
+    renderHitList();
+    advancedBackdrop.classList.add('open');
+    advancedBackdrop.setAttribute('aria-hidden', 'false');
+    setTimeout(updateStadiumScale, 60);
+    triggerHaptic(20);
+  }
+
+  function closeAdvancedTools() {
+    if (!advancedBackdrop) return;
+    advancedBackdrop.classList.remove('open');
+    advancedBackdrop.setAttribute('aria-hidden', 'true');
+  }
+
+  if (advancedToolsBtn) {
+    advancedToolsBtn.addEventListener('click', openAdvancedTools);
+  }
+
+  if (closeAdvancedBtn) {
+    closeAdvancedBtn.addEventListener('click', closeAdvancedTools);
+  }
+
+  if (advancedBackdrop) {
+    advancedBackdrop.addEventListener('click', (e) => {
+      if (e.target === advancedBackdrop) closeAdvancedTools();
+    });
+  }
+
+  // --- Canvas Instructure Style Modules (Dropdown Functionality) ---
+  const canvasModules = document.querySelectorAll('.canvas-module');
+  canvasModules.forEach((mod) => {
+    const header = mod.querySelector('.module-header');
+    const body = mod.querySelector('.module-body');
+    const chevron = mod.querySelector('.module-chevron');
+    if (header && body) {
+      header.addEventListener('click', () => {
+        const isOpen = mod.classList.contains('open');
+        if (isOpen) {
+          mod.classList.remove('open');
+          mod.classList.add('collapsed');
+          body.style.display = 'none';
+          header.setAttribute('aria-expanded', 'false');
+          if (chevron) {
+            chevron.classList.remove('fa-chevron-down');
+            chevron.classList.add('fa-chevron-right');
+          }
+        } else {
+          mod.classList.add('open');
+          mod.classList.remove('collapsed');
+          body.style.display = 'flex';
+          header.setAttribute('aria-expanded', 'true');
+          if (chevron) {
+            chevron.classList.remove('fa-chevron-right');
+            chevron.classList.add('fa-chevron-down');
+          }
+          if (mod.id === 'module-hit-log') {
+            setTimeout(updateStadiumScale, 50);
+          }
+        }
+        triggerHaptic(15);
+      });
+    }
+  });
+
+  // --- Hit Log Tool (Minimalist Bleacher Scorekeeper) ---
+  const hitTeamAwayBtn = document.getElementById('hit-team-away');
+  const hitTeamHomeBtn = document.getElementById('hit-team-home');
+  const hitCurrentInningChip = document.getElementById('hit-current-inning-chip');
+  const hitPlayerInput = document.getElementById('hit-player-input');
+  const hitOutcomeSelect = document.getElementById('hit-outcome-select');
+  const stadiumViewport = document.getElementById('stadium-viewport');
+  const stadiumEl = document.getElementById('stadium');
+  const stadiumHitMarker = document.getElementById('stadium-hit-marker');
+  const hitLocationTag = document.getElementById('hit-location-tag');
+  const logHitSubmitBtn = document.getElementById('log-hit-submit-btn');
+  const loggedHitsList = document.getElementById('logged-hits-list');
+  const clearHitsBtn = document.getElementById('clear-hits-btn');
+  const hitLogBadge = document.getElementById('hit-log-badge');
+  const bleacherNotesInput = document.getElementById('bleacher-notes-input');
+
+  let selectedHitTeam = isTopInning ? 'Away' : 'Home';
+  let currentHitLocation = { x: 485, y: 440, name: 'Center Field' };
+  let hitLogData = [];
+  try {
+    hitLogData = JSON.parse(localStorage.getItem('baseball_hit_log') || '[]');
+  } catch (_) {
+    hitLogData = [];
+  }
+
+  function updateHitContextUI() {
+    if (hitTeamAwayBtn && hitTeamHomeBtn) {
+      hitTeamAwayBtn.textContent = awayTeamName;
+      hitTeamHomeBtn.textContent = homeTeamName;
+      hitTeamAwayBtn.classList.toggle('active', selectedHitTeam === 'Away');
+      hitTeamHomeBtn.classList.toggle('active', selectedHitTeam === 'Home');
+    }
+    if (hitCurrentInningChip) {
+      hitCurrentInningChip.textContent = `${isTopInning ? 'Top' : 'Bot'} ${currentInning}`;
+    }
+  }
+
+  if (hitTeamAwayBtn) {
+    hitTeamAwayBtn.addEventListener('click', () => {
+      selectedHitTeam = 'Away';
+      updateHitContextUI();
+      triggerHaptic(15);
+    });
+  }
+
+  if (hitTeamHomeBtn) {
+    hitTeamHomeBtn.addEventListener('click', () => {
+      selectedHitTeam = 'Home';
+      updateHitContextUI();
+      triggerHaptic(15);
+    });
+  }
+
+  function updateStadiumScale() {
+    if (!stadiumViewport || !stadiumEl) return;
+    const vpWidth = stadiumViewport.clientWidth;
+    if (vpWidth === 0) return;
+    const scale = Math.min(0.42, Math.max(0.28, (vpWidth - 8) / 980));
+    stadiumEl.style.transform = `translateX(-50%) scale(${scale})`;
+    stadiumEl.dataset.scale = String(scale);
+  }
+
+  window.addEventListener('resize', updateStadiumScale);
+
+  function calculateHitZone(x, y) {
+    const homeX = 485;
+    const homeY = 678;
+    const dist = Math.hypot(x - homeX, y - homeY);
+
+    if (dist < 150) {
+      return 'Infield (Around Plate / Pitcher)';
+    } else if (dist < 340) {
+      if (x < 420) return 'Infield (Third Base / 3B-SS)';
+      if (x > 550) return 'Infield (First Base / 1B-2B)';
+      return 'Infield (Behind 2nd Base)';
+    } else {
+      const isDeep = dist > 490 ? 'Deep ' : '';
+      if (x < 400) return `${isDeep}Left Field (LF)`;
+      if (x > 570) return `${isDeep}Right Field (RF)`;
+      return `${isDeep}Center Field (CF)`;
+    }
+  }
+
+  function placeHitPin(x, y) {
+    const clampedX = Math.max(80, Math.min(900, Math.round(x)));
+    const clampedY = Math.max(30, Math.min(710, Math.round(y)));
+    const zoneName = calculateHitZone(clampedX, clampedY);
+
+    currentHitLocation = {
+      x: clampedX,
+      y: clampedY,
+      name: zoneName
+    };
+
+    if (stadiumHitMarker) {
+      stadiumHitMarker.style.display = 'block';
+      stadiumHitMarker.style.left = `${clampedX}px`;
+      stadiumHitMarker.style.top = `${clampedY}px`;
+    }
+    if (hitLocationTag) {
+      hitLocationTag.textContent = zoneName;
+    }
+    triggerHaptic(20);
+  }
+
+  // Initial pin position
+  placeHitPin(485, 410);
+
+  if (stadiumViewport) {
+    stadiumViewport.addEventListener('pointerdown', (e) => {
+      const rect = stadiumViewport.getBoundingClientRect();
+      const scale = parseFloat(stadiumEl ? stadiumEl.dataset.scale : '0.34') || 0.34;
+      const vpCenterX = rect.left + rect.width / 2;
+      const stadiumCenterX = 490;
+      const clickDistFromCenterX = (e.clientX - vpCenterX) / scale;
+      const x = stadiumCenterX + clickDistFromCenterX;
+      const y = (e.clientY - rect.top - 6) / scale;
+
+      placeHitPin(x, y);
+    });
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function renderHitList() {
+    if (!loggedHitsList) return;
+    if (hitLogBadge) {
+      hitLogBadge.textContent = `${hitLogData.length} Logged`;
+    }
+
+    if (hitLogData.length === 0) {
+      loggedHitsList.innerHTML = `<div class="hit-empty-hint">No hits logged yet. Tap the diamond and save your first play!</div>`;
+      return;
+    }
+
+    loggedHitsList.innerHTML = '';
+    hitLogData.forEach((hit) => {
+      const card = document.createElement('div');
+      card.className = 'logged-hit-card';
+
+      let outcomeCls = 'out';
+      const outcLower = hit.outcome.toLowerCase();
+      if (outcLower.includes('single')) outcomeCls = 'single';
+      else if (outcLower.includes('double')) outcomeCls = 'double';
+      else if (outcLower.includes('triple')) outcomeCls = 'triple';
+      else if (outcLower.includes('home run')) outcomeCls = 'hr';
+
+      card.innerHTML = `
+        <div class="hit-card-left">
+          <span class="hit-player-name">${escapeHtml(hit.player)}</span>
+          <div class="hit-meta-info">
+            <span>${escapeHtml(hit.teamName || hit.team)}</span>
+            <span>•</span>
+            <span>${escapeHtml(hit.inning)}</span>
+            <span>•</span>
+            <span>${escapeHtml(hit.location)}</span>
+          </div>
+        </div>
+        <div class="hit-card-right">
+          <span class="hit-outcome-badge ${outcomeCls}">${escapeHtml(hit.outcome)}</span>
+          <button type="button" class="delete-hit-btn" title="Delete hit" data-id="${hit.id}">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </div>
+      `;
+
+      const deleteBtn = card.querySelector('.delete-hit-btn');
+      if (deleteBtn) {
+        deleteBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteHit(hit.id);
+        });
+      }
+
+      loggedHitsList.appendChild(card);
+    });
+  }
+
+  function deleteHit(id) {
+    hitLogData = hitLogData.filter((h) => h.id !== id);
+    localStorage.setItem('baseball_hit_log', JSON.stringify(hitLogData));
+    renderHitList();
+    showInningToast('HIT LOG', 'Entry Removed');
+    triggerHaptic(20);
+  }
+
+  if (clearHitsBtn) {
+    clearHitsBtn.addEventListener('click', () => {
+      if (hitLogData.length === 0) return;
+      hitLogData = [];
+      localStorage.setItem('baseball_hit_log', JSON.stringify(hitLogData));
+      renderHitList();
+      showInningToast('HIT LOG', 'All Entries Cleared');
+      triggerHaptic([30, 30]);
+    });
+  }
+
+  if (logHitSubmitBtn) {
+    logHitSubmitBtn.addEventListener('click', () => {
+      const activeTeamName = selectedHitTeam === 'Home' ? homeTeamName : awayTeamName;
+      const rawPlayer = hitPlayerInput ? hitPlayerInput.value.trim() : '';
+      const playerText = rawPlayer || `${activeTeamName} Batter`;
+      const outcomeText = hitOutcomeSelect ? hitOutcomeSelect.value : 'Single';
+
+      const newHit = {
+        id: Date.now(),
+        player: playerText,
+        outcome: outcomeText,
+        location: currentHitLocation.name,
+        team: selectedHitTeam,
+        teamName: activeTeamName,
+        inning: `${isTopInning ? 'Top' : 'Bot'} ${currentInning}`,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        x: currentHitLocation.x,
+        y: currentHitLocation.y
+      };
+
+      hitLogData.unshift(newHit);
+      localStorage.setItem('baseball_hit_log', JSON.stringify(hitLogData));
+      renderHitList();
+
+      showInningToast('HIT LOG', `${playerText} (${outcomeText})`);
+      triggerHaptic([30, 40]);
+
+      if (hitPlayerInput) {
+        hitPlayerInput.value = '';
+      }
+    });
+  }
+
+  // Bleacher Notes Input
+  if (bleacherNotesInput) {
+    bleacherNotesInput.value = localStorage.getItem('baseball_bleacher_notes') || '';
+    bleacherNotesInput.addEventListener('input', () => {
+      localStorage.setItem('baseball_bleacher_notes', bleacherNotesInput.value);
+    });
+  }
+
+  // Render initial hits on load
+  renderHitList();
+  updateHitContextUI();
+
+  // Escape Key to close any active drawer
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
       if (shareBackdrop && shareBackdrop.classList.contains('open')) closeShareMenu();
       if (settingsBackdrop && settingsBackdrop.classList.contains('open')) closeSettings();
+      if (advancedBackdrop && advancedBackdrop.classList.contains('open')) closeAdvancedTools();
     }
   });
 
