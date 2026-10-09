@@ -291,14 +291,17 @@ button {
 
 .score-card {
   border-radius: 34px;
-  padding: 24px 18px 24px 18px;
+  padding: 24px 18px 22px 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  min-height: 200px;
+  height: auto;
   touch-action: none !important;
   overscroll-behavior-y: none !important;
   user-select: none;
   -webkit-user-select: none;
+  transition: min-height 0.3s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease, border-color 0.35s ease;
 }
 
 .scores {
@@ -315,7 +318,7 @@ button {
   font-weight: 900;
   line-height: 1;
   padding: 0 10px;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
   user-select: none;
   -webkit-user-select: none;
   touch-action: none !important;
@@ -342,27 +345,41 @@ button {
   opacity: 0.65;
 }
 
-/* Team Labels & Smooth Sliding Underline */
+/* Team Labels & Smooth Sliding Underline with Responsive Vertical Scaling */
 .labels {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
-  padding: 0 16px;
+  padding: 0 14px;
   margin-top: 10px;
   position: relative;
+  gap: 12px;
 }
 
 .team-label {
-  font-size: 26px;
+  font-size: clamp(17px, 5.2vw, 26px);
   font-weight: 800;
   user-select: none;
   cursor: pointer;
-  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease;
+  transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), color 0.3s ease, font-size 0.25s ease;
   position: relative;
   padding-bottom: 8px;
   color: var(--text-primary);
   letter-spacing: 0.5px;
+  max-width: 48%;
+  line-height: 1.15;
+  text-align: center;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+.team-label.compact {
+  font-size: 20px;
+}
+
+.team-label.ultra-compact {
+  font-size: 16px;
 }
 
 .team-label:hover {
@@ -387,7 +404,7 @@ button {
   background-color: var(--accent-color);
   border-radius: 4px;
   box-shadow: 0 2px 8px var(--shadow-color);
-  transition: transform 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.15), width 0.42s cubic-bezier(0.2, 0.9, 0.25, 1.15), background-color 0.35s ease;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), width 0.4s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease;
   pointer-events: none;
   will-change: transform, width;
 }
@@ -713,12 +730,13 @@ button {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 10px 6px;
-  border-radius: 14px;
+  padding: 10px 8px;
+  border-radius: 16px;
   border: 2.5px solid var(--drawer-border);
   background-color: var(--drawer-card);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
 }
 
 .theme-card:hover {
@@ -728,38 +746,155 @@ button {
 
 .theme-card.active {
   border-color: var(--accent-color);
-  background-color: rgba(125, 125, 125, 0.12);
+  background-color: var(--bg-card);
+  box-shadow: 0 4px 12px var(--shadow-color);
   transform: scale(1.02);
 }
 
-.theme-preview {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 2px solid var(--border-color);
+/* Color Palette Swatch Card */
+.theme-palette-card {
+  width: 100%;
+  height: 24px;
+  border-radius: 8px;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--border-color);
+  box-shadow: 0 2px 6px var(--shadow-color);
+  transition: transform 0.2s ease;
 }
 
-.theme-light-preview { background-color: #ffffff; }
-.theme-dark-preview { background-color: #090a0f; }
-.theme-ballpark-preview { background-color: #06170f; }
-.theme-royal-preview { background-color: #060e1b; }
-.theme-vintage-preview { background-color: #ece3cf; }
-
-.preview-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: var(--border-color);
+.theme-card:hover .theme-palette-card {
+  transform: scale(1.04);
 }
+
+.palette-swatch {
+  height: 100%;
+  display: block;
+}
+
+.palette-swatch.bg { flex: 2; }
+.palette-swatch.card { flex: 2; }
+.palette-swatch.accent { flex: 1.2; }
+
+/* Palette Theme Colors */
+.theme-palette-card.light .palette-swatch.bg { background-color: #f4f5f8; }
+.theme-palette-card.light .palette-swatch.card { background-color: #ffffff; }
+.theme-palette-card.light .palette-swatch.accent { background-color: #000000; }
+
+.theme-palette-card.dark .palette-swatch.bg { background-color: #090a0f; }
+.theme-palette-card.dark .palette-swatch.card { background-color: #12151c; }
+.theme-palette-card.dark .palette-swatch.accent { background-color: #10b981; }
+
+.theme-palette-card.ballpark .palette-swatch.bg { background-color: #06170f; }
+.theme-palette-card.ballpark .palette-swatch.card { background-color: #0d281a; }
+.theme-palette-card.ballpark .palette-swatch.accent { background-color: #f59e0b; }
+
+.theme-palette-card.royal .palette-swatch.bg { background-color: #060e1b; }
+.theme-palette-card.royal .palette-swatch.card { background-color: #0f1c32; }
+.theme-palette-card.royal .palette-swatch.accent { background-color: #ef4444; }
+
+.theme-palette-card.vintage .palette-swatch.bg { background-color: #ece3cf; }
+.theme-palette-card.vintage .palette-swatch.card { background-color: #f9f5eb; }
+.theme-palette-card.vintage .palette-swatch.accent { background-color: #c2410c; }
 
 .theme-title {
   font-size: 11px;
   font-weight: 800;
   color: var(--text-primary);
   text-align: center;
+}
+
+/* Circular Paint-Out Theme Animation Overlay */
+.theme-circle-reveal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  pointer-events: none;
+  background-color: #ffffff;
+}
+
+.theme-circle-reveal[data-theme="light"] { background-color: #f4f5f8; }
+.theme-circle-reveal[data-theme="dark"] { background-color: #090a0f; }
+.theme-circle-reveal[data-theme="ballpark"] { background-color: #06170f; }
+.theme-circle-reveal[data-theme="royal"] { background-color: #060e1b; }
+.theme-circle-reveal[data-theme="vintage"] { background-color: #ece3cf; }
+
+/* Preferences Haptic Toggle */
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background-color: var(--drawer-card);
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 2px solid var(--drawer-border);
+}
+
+.toggle-text-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.toggle-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.toggle-desc {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.apple-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.apple-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.apple-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--drawer-border);
+  border: 2px solid var(--border-color);
+  border-radius: 28px;
+  transition: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-primary);
+  border-radius: 50%;
+  transition: 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-switch input:checked + .apple-slider {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+.apple-switch input:checked + .apple-slider:before {
+  transform: translateX(20px);
+  background-color: #ffffff;
 }
 
 /* Team Names Inputs */
