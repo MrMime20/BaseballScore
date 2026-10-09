@@ -97,35 +97,60 @@
             <label class="group-label">Color Theme</label>
             <div class="themes-grid" id="themes-grid">
               <button type="button" class="theme-card active" data-theme="light">
-                <span class="theme-preview theme-light-preview">
-                  <span class="preview-dot"></span>
-                </span>
+                <div class="theme-palette-card light">
+                  <span class="palette-swatch bg"></span>
+                  <span class="palette-swatch card"></span>
+                  <span class="palette-swatch accent"></span>
+                </div>
                 <span class="theme-title">Classic Light</span>
               </button>
               <button type="button" class="theme-card" data-theme="dark">
-                <span class="theme-preview theme-dark-preview">
-                  <span class="preview-dot"></span>
-                </span>
+                <div class="theme-palette-card dark">
+                  <span class="palette-swatch bg"></span>
+                  <span class="palette-swatch card"></span>
+                  <span class="palette-swatch accent"></span>
+                </div>
                 <span class="theme-title">Night Game</span>
               </button>
               <button type="button" class="theme-card" data-theme="ballpark">
-                <span class="theme-preview theme-ballpark-preview">
-                  <span class="preview-dot"></span>
-                </span>
+                <div class="theme-palette-card ballpark">
+                  <span class="palette-swatch bg"></span>
+                  <span class="palette-swatch card"></span>
+                  <span class="palette-swatch accent"></span>
+                </div>
                 <span class="theme-title">Ballpark Green</span>
               </button>
               <button type="button" class="theme-card" data-theme="royal">
-                <span class="theme-preview theme-royal-preview">
-                  <span class="preview-dot"></span>
-                </span>
+                <div class="theme-palette-card royal">
+                  <span class="palette-swatch bg"></span>
+                  <span class="palette-swatch card"></span>
+                  <span class="palette-swatch accent"></span>
+                </div>
                 <span class="theme-title">Royal Navy</span>
               </button>
               <button type="button" class="theme-card" data-theme="vintage">
-                <span class="theme-preview theme-vintage-preview">
-                  <span class="preview-dot"></span>
-                </span>
-                <span class="theme-title">Vintage</span>
+                <div class="theme-palette-card vintage">
+                  <span class="palette-swatch bg"></span>
+                  <span class="palette-swatch card"></span>
+                  <span class="palette-swatch accent"></span>
+                </div>
+                <span class="theme-title">Vintage Leather</span>
               </button>
+            </div>
+          </div>
+
+          <!-- Preferences (Haptic Feedback) -->
+          <div class="settings-group">
+            <label class="group-label">Preferences</label>
+            <div class="settings-toggle-row">
+              <div class="toggle-text-block">
+                <span class="toggle-title">Haptic Feedback</span>
+                <span class="toggle-desc">Vibrate on taps, score changes & side flips</span>
+              </div>
+              <label class="apple-switch" title="Toggle haptic vibration">
+                <input type="checkbox" id="haptic-toggle" checked />
+                <span class="apple-slider"></span>
+              </label>
             </div>
           </div>
 
@@ -224,9 +249,6 @@
             <div class="preview-header-row">
               <label class="group-label">Preview</label>
               <div class="preview-actions">
-                <button type="button" class="copy-preview-btn announcer-btn" id="speak-preview-btn" title="Announce sportscast aloud">
-                  <i class="fa-solid fa-volume-high"></i> <span>Announce</span>
-                </button>
                 <button type="button" class="copy-preview-btn" id="copy-preview-btn" title="Copy preview text">
                   <i class="fa-solid fa-copy"></i> <span>Copy</span>
                 </button>
