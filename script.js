@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let awayTeamName = localStorage.getItem('baseball_away_team') || 'Away';
   let selectedShareFormat = 'basic'; // 'basic', 'standard', 'broadcast'
   let currentTheme = localStorage.getItem('baseball_theme') || 'light';
+  let hapticsEnabled = localStorage.getItem('baseball_haptics_enabled') !== 'false';
 
   // Apply saved theme
   document.body.setAttribute('data-theme', currentTheme);
@@ -43,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const settingsBtn = document.getElementById('settings-btn');
   const settingsBackdrop = document.getElementById('settings-backdrop');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
+  const hapticToggle = document.getElementById('haptic-toggle');
   const homeNameInput = document.getElementById('home-name-input');
   const awayNameInput = document.getElementById('away-name-input');
   const themeCards = document.querySelectorAll('.theme-card');
@@ -60,7 +62,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const summaryCards = document.querySelectorAll('.summary-card');
   const sharePreviewText = document.getElementById('share-preview-text');
   const copyPreviewBtn = document.getElementById('copy-preview-btn');
-  const speakPreviewBtn = document.getElementById('speak-preview-btn');
   const shareNativeBtn = document.getElementById('share-native-btn');
   const shareSmsBtn = document.getElementById('share-sms-btn');
   const shareEmailBtn = document.getElementById('share-email-btn');
@@ -69,13 +70,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // Timeouts & Tracking
   let sideChangeTimeout = null;
   let toastHideTimeout = null;
-  let speechSynthUtterance = null;
+
+  // --- Haptic Feedback Helper ---
+  function triggerHaptic(pattern = 20) {
+    if (hapticsEnabled && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(pattern);
+      } catch (_) {}
+    }
+  }
+
+  if (hapticToggle) {
+    hapticToggle.checked = hapticsEnabled;
+    hapticToggle.addEventListener('change', () => {
+      hapticsEnabled = hapticToggle.checked;
+      localStorage.setItem('baseball_haptics_enabled', String(hapticsEnabled));
+      if (hapticsEnabled) triggerHaptic(30);
+    });
+  }
 
   // --- Visual Feedback & Toast Utilities ---
   function triggerPop(element) {
     if (!element) return;
     element.classList.remove('pop-feedback');
-    void element.offsetWidth; // Force reflow
+    void element.offsetWidth; // Force DOM reflow
     element.classList.add('pop-feedback');
   }
 
@@ -95,6 +113,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1800);
   }
 
+  // --- Dynamic Team Names Sizing (Prevent Overflows) ---
+  function fitTeamNames() {
+    if (!homeLabelEl || !awayLabelEl) return;
+    const maxLen = Math.max(homeTeamName.length, awayTeamName.length);
+
+    homeLabelEl.classList.remove('compact', 'ultra-compact');
+    awayLabelEl.classList.remove('compact', 'ultra-compact');
+
+    if (maxLen >= 11) {
+      homeLabelEl.classList.add('ultra-compact');
+      awayLabelEl.classList.add('ultra-compact');
+    } else if (maxLen >= 7) {
+      homeLabelEl.classList.add('compact');
+      awayLabelEl.classList.add('compact');
+    }
+
+    requestAnimationFrame(updateUnderlinePosition);
+  }
+
   // --- Sliding Underline Positioner ---
   function updateUnderlinePosition() {
     if (!teamLabelsContainer || !battingUnderline || !awayLabelEl || !homeLabelEl) return;
@@ -112,8 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
     battingUnderline.style.transform = `translateX(${leftOffset}px)`;
   }
 
-  window.addEventListener('resize', updateUnderlinePosition);
-  setTimeout(updateUnderlinePosition, 80);
+  window.addEventListener('resize', () => {
+    fitTeamNames();
+    updateUnderlinePosition();
+  });
+  setTimeout(fitTeamNames, 60);
+  setTimeout(updateUnderlinePosition, 100);
   setTimeout(updateUnderlinePosition, 300);
 
   // --- Mobile Pull-To-Refresh Prevention ---
@@ -134,114 +175,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Runs (Score) Modification Logic ---
   function changeHomeScore(delta) {
+    const prev = homeScoreVal;
     homeScoreVal = Math.max(0, homeScoreVal + delta);
     if (homeScoreEl) {
       homeScoreEl.textContent = homeScoreVal;
       triggerPop(homeScoreEl);
     }
     updateSharePreview();
-    if (navigator.vibrate) navigator.vibrate(20);
+    if (homeScoreVal !== prev) {
+      triggerHaptic(20);
+      return true;
+    }
+    return false;
   }
 
   function changeAwayScore(delta) {
+    const prev = awayScoreVal;
     awayScoreVal = Math.max(0, awayScoreVal + delta);
     if (awayScoreEl) {
       awayScoreEl.textContent = awayScoreVal;
       triggerPop(awayScoreEl);
     }
     updateSharePreview();
-    if (navigator.vibrate) navigator.vibrate(20);
-  }
-
-  // --- Gesture Detection for Score Elements ---
-  function setupSwipeGestures(element, { onSwipeUp, onSwipeDown, onTap }) {
-    if (!element) return;
-
-    let startX = 0;
-    let startY = 0;
-    let isTracking = false;
-    let moved = false;
-    let startTime = 0;
-
-    element.addEventListener('pointerdown', (e) => {
-      if (e.button !== 0 && e.pointerType === 'mouse') return;
-      startX = e.clientX;
-      startY = e.clientY;
-      startTime = Date.now();
-      isTracking = true;
-      moved = false;
-
-      if (typeof element.setPointerCapture === 'function') {
-        try {
-          element.setPointerCapture(e.pointerId);
-        } catch (_) {}
-      }
-    });
-
-    element.addEventListener('pointermove', (e) => {
-      if (!isTracking) return;
-      const diffX = e.clientX - startX;
-      const diffY = e.clientY - startY;
-      if (Math.abs(diffX) > 6 || Math.abs(diffY) > 6) {
-        moved = true;
-      }
-    });
-
-    const handlePointerEnd = (e) => {
-      if (!isTracking) return;
-      isTracking = false;
-
-      const diffY = e.clientY - startY;
-      const elapsed = Date.now() - startTime;
-      const threshold = 18;
-
-      if (Math.abs(diffY) >= threshold) {
-        if (diffY < 0 && onSwipeUp) {
-          onSwipeUp();
-          return;
-        } else if (diffY > 0 && onSwipeDown) {
-          onSwipeDown();
-          return;
-        }
-      }
-
-      if (!moved && elapsed < 400 && onTap) {
-        onTap(e);
-      }
-    };
-
-    element.addEventListener('pointerup', handlePointerEnd);
-    element.addEventListener('pointercancel', () => {
-      isTracking = false;
-      moved = false;
-    });
-  }
-
-  // Attach Gestures to Scores
-  setupSwipeGestures(homeScoreEl, {
-    onSwipeUp: () => changeHomeScore(+1),
-    onSwipeDown: () => changeHomeScore(-1),
-    onTap: () => changeHomeScore(+1)
-  });
-
-  setupSwipeGestures(awayScoreEl, {
-    onSwipeUp: () => changeAwayScore(+1),
-    onSwipeDown: () => changeAwayScore(-1),
-    onTap: () => changeAwayScore(+1)
-  });
-
-  if (homeScoreEl) {
-    homeScoreEl.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      changeHomeScore(-1);
-    });
-  }
-
-  if (awayScoreEl) {
-    awayScoreEl.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      changeAwayScore(-1);
-    });
+    if (awayScoreVal !== prev) {
+      triggerHaptic(20);
+      return true;
+    }
+    return false;
   }
 
   // --- Inning Display Update ---
@@ -281,7 +241,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     triggerPop(inningContainer);
     updateInningDisplay();
-    if (navigator.vibrate) navigator.vibrate(20);
+    triggerHaptic(25);
   }
 
   // Decrease by 1 half-inning
@@ -299,98 +259,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (changed) {
       triggerPop(inningContainer);
       updateInningDisplay();
-      if (navigator.vibrate) navigator.vibrate(15);
+      triggerHaptic(18);
       return true;
     }
     return false;
   }
 
-  // --- Inning Counter Tap & Tap-and-Hold Logic ---
-  // TAPPED: increases by 1 half-inning
-  // TAPPED AND HELD: decreases by 1 half-inning incrementally (slow, smooth, easy to control)
-  let inningHoldTimeout = null;
-  let inningHoldInterval = null;
-  let isHoldingInning = false;
-  let inningPressStartTime = 0;
-
-  function startInningHoldTracking(e) {
-    if (e.button !== undefined && e.button !== 0) return;
-    isHoldingInning = false;
-    inningPressStartTime = Date.now();
-
-    clearTimeout(inningHoldTimeout);
-    clearInterval(inningHoldInterval);
-
-    // After 400ms of holding down, trigger initial decrease and start slow 500ms step interval
-    inningHoldTimeout = setTimeout(() => {
-      isHoldingInning = true;
-      decreaseHalfInning();
-
-      // Decrement incrementally every 500ms (slow and steady, no crazy reflexes required!)
-      inningHoldInterval = setInterval(() => {
-        const stillDecreased = decreaseHalfInning();
-        if (!stillDecreased) {
-          clearInterval(inningHoldInterval);
-        }
-      }, 500);
-    }, 400);
-  }
-
-  function endInningHoldTracking() {
-    clearTimeout(inningHoldTimeout);
-    clearInterval(inningHoldInterval);
-
-    const pressDuration = Date.now() - inningPressStartTime;
-
-    // If it was a quick tap (not held)
-    if (!isHoldingInning && pressDuration < 400 && pressDuration > 10) {
-      advanceHalfInning();
-    }
-    isHoldingInning = false;
-  }
-
-  function cancelInningHoldTracking() {
-    clearTimeout(inningHoldTimeout);
-    clearInterval(inningHoldInterval);
-    isHoldingInning = false;
-  }
-
-  if (inningContainer) {
-    inningContainer.addEventListener('pointerdown', startInningHoldTracking);
-    inningContainer.addEventListener('pointerup', endInningHoldTracking);
-    inningContainer.addEventListener('pointercancel', cancelInningHoldTracking);
-    inningContainer.addEventListener('pointerleave', cancelInningHoldTracking);
-
-    inningContainer.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      decreaseHalfInning();
+  // --- Outs Tracker Logic ---
+  function updateOutsDisplay() {
+    outCircles.forEach((circle) => {
+      const outNum = parseInt(circle.getAttribute('data-out'), 10);
+      circle.classList.toggle('active', outNum <= currentOuts);
     });
+    updateSharePreview();
   }
 
-  // Tapping Home or Away team label swaps batting side
-  if (homeLabelEl) {
-    homeLabelEl.addEventListener('click', () => {
-      if (isTopInning) {
-        clearTimeout(sideChangeTimeout);
-        isTopInning = false;
-        triggerPop(homeLabelEl);
-        updateInningDisplay();
-      }
-    });
-  }
-
-  if (awayLabelEl) {
-    awayLabelEl.addEventListener('click', () => {
-      if (!isTopInning) {
-        clearTimeout(sideChangeTimeout);
-        isTopInning = true;
-        triggerPop(awayLabelEl);
-        updateInningDisplay();
-      }
-    });
-  }
-
-  // --- Automatic 3-Outs Side Change ---
   function handleThreeOuts() {
     clearTimeout(sideChangeTimeout);
 
@@ -404,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     showInningToast('3 OUTS', 'CHANGE SIDES');
+    triggerHaptic([40, 60, 40]);
 
     sideChangeTimeout = setTimeout(() => {
       currentOuts = 0;
@@ -412,56 +296,174 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 450);
   }
 
-  function updateOutsDisplay() {
-    outCircles.forEach((circle) => {
-      const outNum = parseInt(circle.getAttribute('data-out'), 10);
-      circle.classList.toggle('active', outNum <= currentOuts);
-    });
-    updateSharePreview();
-  }
-
   function changeOuts(delta) {
     if (delta > 0) {
       if (currentOuts + 1 >= 3) {
         handleThreeOuts();
+        return true;
       } else {
         clearTimeout(sideChangeTimeout);
         currentOuts += delta;
         triggerPop(outsContainer);
         updateOutsDisplay();
+        triggerHaptic(20);
+        return true;
       }
     } else {
       clearTimeout(sideChangeTimeout);
+      const prev = currentOuts;
       currentOuts = Math.max(0, currentOuts + delta);
-      triggerPop(outsContainer);
-      updateOutsDisplay();
+      if (currentOuts !== prev) {
+        triggerPop(outsContainer);
+        updateOutsDisplay();
+        triggerHaptic(15);
+        return true;
+      }
+      return false;
     }
   }
 
-  outCircles.forEach((circle) => {
-    circle.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const clickedOut = parseInt(circle.getAttribute('data-out'), 10);
-      if (currentOuts === clickedOut) {
-        clearTimeout(sideChangeTimeout);
-        currentOuts = clickedOut - 1;
-        triggerPop(outsContainer);
-        updateOutsDisplay();
-      } else if (clickedOut === 3) {
-        handleThreeOuts();
-      } else {
-        clearTimeout(sideChangeTimeout);
-        currentOuts = clickedOut;
-        triggerPop(outsContainer);
-        updateOutsDisplay();
+  // --- Unified Tap-And-Hold Controller ---
+  // TAP: increases by 1
+  // HOLD (>= 400ms): decreases by 1, and continues stepping down incrementally every 500ms
+  function setupTapAndHold(element, { onIncrease, onDecrease, holdDelay = 400, stepInterval = 500, onSwipeUp, onSwipeDown }) {
+    if (!element) return;
+    let holdTimeout = null;
+    let holdInterval = null;
+    let isHolding = false;
+    let startTime = 0;
+    let startY = 0;
+    let movedFar = false;
+
+    element.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0 && e.pointerType === 'mouse') return;
+      isHolding = false;
+      movedFar = false;
+      startTime = Date.now();
+      startY = e.clientY;
+
+      clearTimeout(holdTimeout);
+      clearInterval(holdInterval);
+
+      holdTimeout = setTimeout(() => {
+        isHolding = true;
+        const couldDec = onDecrease();
+        if (couldDec !== false) {
+          holdInterval = setInterval(() => {
+            const continueDec = onDecrease();
+            if (continueDec === false) {
+              clearInterval(holdInterval);
+            }
+          }, stepInterval);
+        }
+      }, holdDelay);
+
+      if (typeof element.setPointerCapture === 'function') {
+        try { element.setPointerCapture(e.pointerId); } catch (_) {}
       }
     });
+
+    element.addEventListener('pointermove', (e) => {
+      const diffY = e.clientY - startY;
+      if (Math.abs(diffY) > 20) {
+        movedFar = true;
+      }
+    });
+
+    const handleEnd = (e) => {
+      clearTimeout(holdTimeout);
+      clearInterval(holdInterval);
+
+      const duration = Date.now() - startTime;
+      const diffY = e.clientY - startY;
+
+      // Handle swipe if moved intentionally
+      if (movedFar && Math.abs(diffY) >= 24) {
+        if (diffY < 0 && onSwipeUp) {
+          onSwipeUp();
+          isHolding = false;
+          return;
+        } else if (diffY > 0 && onSwipeDown) {
+          onSwipeDown();
+          isHolding = false;
+          return;
+        }
+      }
+
+      // If it was a quick tap (not held, not dragged far)
+      if (!isHolding && !movedFar && duration < holdDelay && duration > 15) {
+        onIncrease();
+      }
+      isHolding = false;
+    };
+
+    element.addEventListener('pointerup', handleEnd);
+    element.addEventListener('pointercancel', () => {
+      clearTimeout(holdTimeout);
+      clearInterval(holdInterval);
+      isHolding = false;
+    });
+
+    element.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      onDecrease();
+    });
+  }
+
+  // 1. Home Score: Tap = +1, Hold = slow -1 decrement
+  setupTapAndHold(homeScoreEl, {
+    onIncrease: () => changeHomeScore(+1),
+    onDecrease: () => changeHomeScore(-1),
+    onSwipeUp: () => changeHomeScore(+1),
+    onSwipeDown: () => changeHomeScore(-1)
   });
 
-  if (outsContainer) {
-    outsContainer.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-      changeOuts(-1);
+  // 2. Away Score: Tap = +1, Hold = slow -1 decrement
+  setupTapAndHold(awayScoreEl, {
+    onIncrease: () => changeAwayScore(+1),
+    onDecrease: () => changeAwayScore(-1),
+    onSwipeUp: () => changeAwayScore(+1),
+    onSwipeDown: () => changeAwayScore(-1)
+  });
+
+  // 3. Inning Stepper: Tap = +1 half inning, Hold = slow -1 half inning decrement
+  setupTapAndHold(inningContainer, {
+    onIncrease: () => advanceHalfInning(),
+    onDecrease: () => decreaseHalfInning(),
+    onSwipeUp: () => advanceHalfInning(),
+    onSwipeDown: () => decreaseHalfInning()
+  });
+
+  // 4. Outs Container: Tap anywhere = +1 Out, Hold = slow -1 decrement
+  setupTapAndHold(outsContainer, {
+    onIncrease: () => changeOuts(+1),
+    onDecrease: () => changeOuts(-1),
+    onSwipeUp: () => changeOuts(+1),
+    onSwipeDown: () => changeOuts(-1)
+  });
+
+  // Tapping Home or Away team label swaps batting side
+  if (homeLabelEl) {
+    homeLabelEl.addEventListener('click', () => {
+      if (isTopInning) {
+        clearTimeout(sideChangeTimeout);
+        isTopInning = false;
+        triggerPop(homeLabelEl);
+        updateInningDisplay();
+        triggerHaptic(20);
+      }
+    });
+  }
+
+  if (awayLabelEl) {
+    awayLabelEl.addEventListener('click', () => {
+      if (!isTopInning) {
+        clearTimeout(sideChangeTimeout);
+        isTopInning = true;
+        triggerPop(awayLabelEl);
+        updateInningDisplay();
+        triggerHaptic(20);
+      }
     });
   }
 
@@ -503,6 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     isTimerRunning = !isTimerRunning;
     updateTimerUI();
     showInningToast('CLOCK', isTimerRunning ? 'RESUMED' : 'PAUSED');
+    triggerHaptic(20);
   }
 
   function resetTimer() {
@@ -513,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     showInningToast('CLOCK', 'RESET (00:00:00)');
     updateSharePreview();
+    triggerHaptic([30, 40]);
   }
 
   startTimer();
@@ -525,6 +529,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // --- Circular Paint-Out Theme Transition ---
+  // Paints outward in a circle starting from the center of the screen
+  function applyThemeWithCircularPaint(newTheme) {
+    if (currentTheme === newTheme) return;
+
+    // Create full screen overlay positioned above backdrop
+    const reveal = document.createElement('div');
+    reveal.className = 'theme-circle-reveal';
+    reveal.setAttribute('data-theme', newTheme);
+    document.body.appendChild(reveal);
+
+    triggerHaptic(30);
+
+    // Animate circular clip-path expanding outward from 50% 50% (screen center)
+    const anim = reveal.animate([
+      { clipPath: 'circle(0% at 50% 50%)', opacity: 1 },
+      { clipPath: 'circle(150% at 50% 50%)', opacity: 1 }
+    ], {
+      duration: 620,
+      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+      fill: 'forwards'
+    });
+
+    anim.onfinish = () => {
+      document.body.setAttribute('data-theme', newTheme);
+      currentTheme = newTheme;
+      localStorage.setItem('baseball_theme', newTheme);
+
+      themeCards.forEach((c) => c.classList.toggle('active', c.getAttribute('data-theme') === newTheme));
+      updateUnderlinePosition();
+      fitTeamNames();
+
+      // Fade out overlay smoothly
+      const fadeOut = reveal.animate([
+        { opacity: 1 },
+        { opacity: 0 }
+      ], {
+        duration: 200,
+        easing: 'ease'
+      });
+
+      fadeOut.onfinish = () => {
+        reveal.remove();
+      };
+    };
+  }
+
   // --- Settings Drawer ---
   function openSettings() {
     if (!settingsBackdrop) return;
@@ -533,6 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     settingsBackdrop.classList.add('open');
     settingsBackdrop.setAttribute('aria-hidden', 'false');
     updateTimerUI();
+    triggerHaptic(20);
   }
 
   function closeSettings() {
@@ -561,13 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
     card.addEventListener('click', () => {
       const theme = card.getAttribute('data-theme');
       if (!theme) return;
-      currentTheme = theme;
-      document.body.setAttribute('data-theme', theme);
-      localStorage.setItem('baseball_theme', theme);
-
-      themeCards.forEach((c) => c.classList.toggle('active', c === card));
-      triggerPop(card);
-      updateUnderlinePosition();
+      applyThemeWithCircularPaint(theme);
     });
   });
 
@@ -580,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
       homeTeamName = homeNameInput.value.trim() || 'Home';
       if (homeLabelEl) homeLabelEl.textContent = homeTeamName;
       localStorage.setItem('baseball_home_team', homeTeamName);
-      updateUnderlinePosition();
+      fitTeamNames();
       updateSharePreview();
     });
   }
@@ -590,13 +636,14 @@ document.addEventListener('DOMContentLoaded', () => {
       awayTeamName = awayNameInput.value.trim() || 'Away';
       if (awayLabelEl) awayLabelEl.textContent = awayTeamName;
       localStorage.setItem('baseball_away_team', awayTeamName);
-      updateUnderlinePosition();
+      fitTeamNames();
       updateSharePreview();
     });
   }
 
   if (homeLabelEl) homeLabelEl.textContent = homeTeamName;
   if (awayLabelEl) awayLabelEl.textContent = awayTeamName;
+  fitTeamNames();
 
   // Modal Clock Controls
   if (modalTimerToggleBtn) {
@@ -616,6 +663,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (awayScoreEl) awayScoreEl.textContent = '0';
       updateSharePreview();
       showInningToast('SCORES', 'RESET TO 0 - 0');
+      triggerHaptic([30, 30]);
       closeSettings();
     });
   }
@@ -639,6 +687,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateOutsDisplay();
       updateTimerUI();
       showInningToast('GAME', 'NEW GAME STARTED');
+      triggerHaptic([40, 50, 40]);
       closeSettings();
     });
   }
@@ -737,47 +786,17 @@ document.addEventListener('DOMContentLoaded', () => {
     sharePreviewText.textContent = generateShareMessage(selectedShareFormat);
   }
 
-  // Speak Aloud feature using SpeechSynthesis
-  function speakSportscast() {
-    if (!('speechSynthesis' in window)) {
-      showInningToast('AUDIO', 'Speech not supported on this browser');
-      return;
-    }
-
-    window.speechSynthesis.cancel();
-    const textToSpeak = sharePreviewText ? sharePreviewText.textContent : generateSportscastAnnouncerCall();
-    speechSynthUtterance = new SpeechSynthesisUtterance(textToSpeak);
-    speechSynthUtterance.rate = 1.05; // Slightly upbeat baseball tempo
-    speechSynthUtterance.pitch = 1.0;
-
-    if (speakPreviewBtn) {
-      speakPreviewBtn.innerHTML = `<i class="fa-solid fa-volume-xmark"></i> <span>Playing...</span>`;
-      speechSynthUtterance.onend = () => {
-        speakPreviewBtn.innerHTML = `<i class="fa-solid fa-volume-high"></i> <span>Announce</span>`;
-      };
-      speechSynthUtterance.onerror = () => {
-        speakPreviewBtn.innerHTML = `<i class="fa-solid fa-volume-high"></i> <span>Announce</span>`;
-      };
-    }
-
-    window.speechSynthesis.speak(speechSynthUtterance);
-  }
-
-  if (speakPreviewBtn) {
-    speakPreviewBtn.addEventListener('click', speakSportscast);
-  }
-
   // --- Share Drawer Actions ---
   function openShareMenu() {
     if (!shareBackdrop) return;
     updateSharePreview();
     shareBackdrop.classList.add('open');
     shareBackdrop.setAttribute('aria-hidden', 'false');
+    triggerHaptic(20);
   }
 
   function closeShareMenu() {
     if (!shareBackdrop) return;
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     shareBackdrop.classList.remove('open');
     shareBackdrop.setAttribute('aria-hidden', 'true');
   }
@@ -814,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
       summaryCards.forEach((c) => c.classList.toggle('active', c === card));
       updateSharePreview();
       triggerPop(document.getElementById('share-preview-box'));
+      triggerHaptic(20);
     });
   });
 
@@ -821,6 +841,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function copyTextToClipboard(text, btnElement) {
     const doFeedback = () => {
       showInningToast('COPIED', 'Score copied to clipboard');
+      triggerHaptic(30);
       if (btnElement) {
         const originalContent = btnElement.innerHTML;
         btnElement.innerHTML = `<i class="fa-solid fa-check"></i> <span>Copied!</span>`;
@@ -866,6 +887,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (shareNativeBtn) {
     shareNativeBtn.addEventListener('click', () => {
       const text = generateShareMessage(selectedShareFormat);
+      triggerHaptic(20);
       if (navigator.share) {
         navigator.share({
           title: `${homeTeamName} vs ${awayTeamName}`,
@@ -879,6 +901,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (shareSmsBtn) {
     shareSmsBtn.addEventListener('click', () => {
+      triggerHaptic(20);
       const text = generateShareMessage(selectedShareFormat);
       const isiOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const delimiter = isiOS ? '&' : '?';
@@ -888,6 +911,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (shareEmailBtn) {
     shareEmailBtn.addEventListener('click', () => {
+      triggerHaptic(20);
       const text = generateShareMessage(selectedShareFormat);
       const subject = `Baseball Score: ${homeTeamName} vs ${awayTeamName}`;
       window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
